@@ -605,7 +605,8 @@ function showToast(msg){
 // ---------- actions ----------
 async function actionRestock(materialName, amount, note){
   const m = findMaterial(materialName);
-  if(!m) return;
+  if(!m || !amount) return;
+  amount = Math.abs(amount);
   m.stock = (m.stock || 0) + amount;
   logMaterialMovement(materialName, '入庫', amount, m.stock, note || '登記進貨');
   saveState();
@@ -615,6 +616,7 @@ async function actionRestock(materialName, amount, note){
 async function actionScrap(materialName, amount, note){
   const m = findMaterial(materialName);
   if(!m || !amount) return;
+  amount = Math.abs(amount);
   m.stock = (m.stock || 0) - amount;
   logMaterialMovement(materialName, '報廢', -amount, m.stock, note || '報廢');
   saveState();
@@ -624,6 +626,7 @@ async function actionScrap(materialName, amount, note){
 async function actionAdjust(materialName, newValue, note){
   const m = findMaterial(materialName);
   if(!m || newValue===null || isNaN(newValue)) return;
+  newValue = Math.max(0, newValue);
   const delta = newValue - (m.stock||0);
   m.stock = newValue;
   logMaterialMovement(materialName, '調整', delta, m.stock, note || '庫存調整');
@@ -634,6 +637,7 @@ async function actionAdjust(materialName, newValue, note){
 async function actionManualOut(materialName, amount, note){
   const m = findMaterial(materialName);
   if(!m || !amount) return;
+  amount = Math.abs(amount);
   m.stock = (m.stock || 0) - amount;
   logMaterialMovement(materialName, '出庫', -amount, m.stock, note || '出庫');
   saveState();
@@ -703,6 +707,7 @@ async function actionAddMaterial(data){
 async function actionPackage(code, qty){
   const p = findPackaged(code);
   if(!p || !qty) return;
+  qty = Math.abs(qty);
   p.packaged_total = (p.packaged_total||0) + qty;
   let shortages = [];
   Object.entries(p.recipe_per_packet).forEach(([matName, gramsPer])=>{
@@ -725,6 +730,7 @@ async function actionPackage(code, qty){
 async function actionSell(code, qty){
   const p = findPackaged(code);
   if(!p || !qty) return;
+  qty = Math.abs(qty);
   p.sold_total = (p.sold_total||0) + qty;
   saveState();
   showToast(`${p.name} 已扣除使用/售出 ${qty}`);
@@ -739,6 +745,7 @@ async function actionSetPackagedSafety(code, val){
 async function actionScrapPackaged(code, qty, note){
   const p = findPackaged(code);
   if(!p || !qty) return;
+  qty = Math.abs(qty);
   p.scrapped_total = (p.scrapped_total||0) + qty;
   const stamp = nowStamp();
   state.packaged_log.unshift({date:stamp.date, time:stamp.time, code, name:p.name, type:'報廢', qty:-qty, note: note||''});
@@ -889,7 +896,7 @@ function renderMaterials(){
         <td><span class="pill ${st.cls}">${st.label}</span></td>
         <td>
           <div class="action-row">
-            <input class="qty-input" type="number" step="any" placeholder="數量" data-restock-input="${esc(m.name)}">
+            <input class="qty-input" type="number" step="any" min="0" placeholder="數量" data-restock-input="${esc(m.name)}">
             <button class="btn btn-sm btn-accent" data-action="restock" data-name="${esc(m.name)}">＋ 進貨</button>
             <button class="btn btn-sm btn-ghost" data-action="open-scrap" data-name="${esc(m.name)}">報廢／調整</button>
           </div>
@@ -1021,7 +1028,7 @@ function renderScrapModal(name){
         <div class="modal-form-block">
           <div class="modal-block-title">報廢（輸入要扣除的數量）</div>
           <div class="action-row">
-            <input class="qty-input" id="scrap-qty" type="number" step="any" placeholder="數量">
+            <input class="qty-input" id="scrap-qty" type="number" step="any" min="0" placeholder="數量">
             <input class="edit-input" id="scrap-note" type="text" placeholder="原因（選填）" style="width:120px;">
             <button class="btn btn-sm btn-accent" data-action="submit-scrap" data-name="${esc(m.name)}">報廢</button>
           </div>
@@ -1029,7 +1036,7 @@ function renderScrapModal(name){
         <div class="modal-form-block">
           <div class="modal-block-title">庫存調整（直接輸入正確的庫存數量）</div>
           <div class="action-row">
-            <input class="qty-input" id="adjust-qty" type="number" step="any" placeholder="正確數量">
+            <input class="qty-input" id="adjust-qty" type="number" step="any" min="0" placeholder="正確數量">
             <input class="edit-input" id="adjust-note" type="text" placeholder="原因（選填）" style="width:120px;">
             <button class="btn btn-sm btn-accent" data-action="submit-adjust" data-name="${esc(m.name)}">調整</button>
           </div>
@@ -1049,7 +1056,7 @@ function renderPackagedScrapModal(code){
         <div class="modal-title">${esc(p.name)} — 報廢</div>
         <div class="modal-sub">目前庫存：${fmt(packagedCurrentStock(p))}</div>
         <div class="action-row">
-          <input class="qty-input" id="pkg-scrap-qty" type="number" step="any" placeholder="數量">
+          <input class="qty-input" id="pkg-scrap-qty" type="number" step="any" min="0" placeholder="數量">
         </div>
         <div class="action-row" style="margin-top:8px;">
           <input class="edit-input full" id="pkg-scrap-note" type="text" placeholder="報廢原因（必填，例如：過期、賣相不佳）">
@@ -1092,7 +1099,7 @@ function renderPackaged(){
         <td><span class="pill ${st.cls}">${st.label}</span></td>
         <td>
           <div class="action-row">
-            <input class="qty-input" type="number" step="any" placeholder="數量" data-pkg-input="${esc(p.code)}">
+            <input class="qty-input" type="number" step="any" min="0" placeholder="數量" data-pkg-input="${esc(p.code)}">
             <button class="btn btn-sm btn-accent" data-action="pkg-add" data-code="${esc(p.code)}">今日包裝</button>
             <button class="btn btn-sm" data-action="pkg-sell" data-code="${esc(p.code)}">今日使用</button>
             <button class="btn btn-sm btn-ghost" data-action="open-pkg-scrap" data-code="${esc(p.code)}">報廢</button>
@@ -1520,7 +1527,7 @@ function bindEvents(){
       const name = action.dataset.name;
       const input = document.querySelector(`[data-restock-input="${CSS.escape(name)}"]`);
       const val = parseFloat(input.value);
-      if(!val){ showToast('請輸入進貨數量'); return; }
+      if(!val || val<=0){ showToast('請輸入大於 0 的進貨數量'); return; }
       actionRestock(name, val);
       input.value='';
     }
@@ -1528,7 +1535,7 @@ function bindEvents(){
       const code = action.dataset.code;
       const input = document.querySelector(`[data-pkg-input="${CSS.escape(code)}"]`);
       const val = parseFloat(input.value);
-      if(!val){ showToast('請輸入包裝數量'); return; }
+      if(!val || val<=0){ showToast('請輸入大於 0 的包裝數量'); return; }
       actionPackage(code, val);
       input.value='';
     }
@@ -1536,7 +1543,7 @@ function bindEvents(){
       const code = action.dataset.code;
       const input = document.querySelector(`[data-pkg-input="${CSS.escape(code)}"]`);
       const val = parseFloat(input.value);
-      if(!val){ showToast('請輸入使用／售出數量'); return; }
+      if(!val || val<=0){ showToast('請輸入大於 0 的使用／售出數量'); return; }
       actionSell(code, val);
       input.value='';
     }
@@ -1626,13 +1633,13 @@ function bindEvents(){
     else if(act==='submit-scrap'){
       const name = action.dataset.name;
       const qty = getNum('scrap-qty');
-      if(!qty){ showToast('請輸入報廢數量'); return; }
+      if(!qty || qty<=0){ showToast('請輸入大於 0 的報廢數量'); return; }
       actionScrap(name, qty, getVal('scrap-note').trim()).then(()=>{ uiState.scrapModal=null; render(); });
     }
     else if(act==='submit-adjust'){
       const name = action.dataset.name;
       const qty = getNum('adjust-qty');
-      if(qty===null){ showToast('請輸入正確的庫存數量'); return; }
+      if(qty===null || qty<0){ showToast('請輸入正確的庫存數量（不可為負數）'); return; }
       actionAdjust(name, qty, getVal('adjust-note').trim()).then(()=>{ uiState.scrapModal=null; render(); });
     }
     else if(act==='open-add-drink'){
@@ -1675,7 +1682,7 @@ function bindEvents(){
       const code = action.dataset.code;
       const qty = getNum('pkg-scrap-qty');
       const note = getVal('pkg-scrap-note').trim();
-      if(!qty){ showToast('請輸入報廢數量'); return; }
+      if(!qty || qty<=0){ showToast('請輸入大於 0 的報廢數量'); return; }
       if(!note){ showToast('請填寫報廢原因'); return; }
       actionScrapPackaged(code, qty, note).then(()=>{ uiState.pkgScrapModal=null; render(); });
     }
@@ -1730,6 +1737,8 @@ function bindEvents(){
       const note = getVal(noteId).trim();
       if(!name || !findMaterial(name)){ showToast('請輸入正確的材料名稱'); return; }
       if(qty===null){ showToast('請輸入數量'); return; }
+      if(type==='調整'){ if(qty<0){ showToast('請輸入大於等於 0 的數量'); return; } }
+      else if(qty<=0){ showToast('請輸入大於 0 的數量'); return; }
       if(type==='入庫') actionRestock(name, qty, note);
       else if(type==='出庫') actionManualOut(name, qty, note);
       else if(type==='報廢') actionScrap(name, qty, note);
