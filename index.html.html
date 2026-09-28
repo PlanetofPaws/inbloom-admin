@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山花 in(BLOOM) ｜ 後台管理系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF6EE;
+  --surface:#F4EEE1;
+  --surface-2:#ECE3CF;
+  --white:#FFFDF8;
+  --ink:#2A2520;
+  --ink-soft:#6B6155;
+  --ink-faint:#9A8F7E;
+  --accent:#8C4A3F;
+  --accent-dark:#6E362D;
+  --accent-tint:#F1DFD8;
+  --sage:#5F7350;
+  --sage-tint:#E2E8D6;
+  --amber:#A97423;
+  --amber-tint:#F4E6C8;
+  --danger:#A8433A;
+  --danger-tint:#F3DAD6;
+  --border:#DFD3B8;
+  --border-soft:#EAE1CB;
+  --shadow: 0 1px 2px rgba(42,37,32,0.06), 0 6px 20px rgba(42,37,32,0.05);
+  --radius: 10px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Noto Sans TC',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.serif{font-family:'Fraunces',serif;}
+
+/* ---------- header ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:1180px; margin:0 auto;
+  padding:18px 20px 0 20px;
+}
+.brand{
+  display:flex; align-items:baseline; gap:10px; margin-bottom:14px;
+}
+.brand-mark{
+  font-family:'Fraunces',serif;
+  font-style:italic;
+  font-weight:500;
+  font-size:26px;
+  color:var(--accent-dark);
+  letter-spacing:0.01em;
+}
+.brand-sub{
+  font-size:13px;
+  color:var(--ink-faint);
+  letter-spacing:0.04em;
+}
+.brand-right{
+  margin-left:auto;
+  font-size:12.5px;
+  color:var(--ink-faint);
+  text-align:right;
+}
+.brand-row{display:flex;align-items:flex-end;}
+
+.tabs{
+  display:flex; gap:4px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding-bottom:0;
+}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{
+  flex:0 0 auto;
+  padding:10px 16px 12px 16px;
+  font-size:14.5px;
+  color:var(--ink-soft);
+  border:none; background:none; cursor:pointer;
+  border-bottom:2px solid transparent;
+  white-space:nowrap;
+  font-family:inherit;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab:hover{color:var(--ink);}
+.tab.active{
+  color:var(--accent-dark);
+  border-bottom:2px solid var(--accent);
+  font-weight:600;
+}
+
+/* ---------- layout ---------- */
+.main{
+  max-width:1180px; margin:0 auto;
+  padding:26px 20px 80px 20px;
+}
+.section-head{
+  display:flex; align-items:baseline; justify-content:space-between;
+  gap:16px; margin-bottom:18px; flex-wrap:wrap;
+}
+.section-title{
+  font-family:'Fraunces',serif; font-weight:500;
+  font-size:22px; color:var(--ink);
+}
+.section-desc{
+  font-size:13.5px; color:var(--ink-faint); margin-top:3px;
+}
+
+.grid{
+  display:grid; gap:14px;
+}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:900px){
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:560px){
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr;}
+}
+
+.card{
+  background:var(--white);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  box-shadow:var(--shadow);
+}
+.stat-card .stat-label{
+  font-size:12.5px; color:var(--ink-faint); margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.stat-card .stat-value{
+  font-family:'Fraunces',serif; font-size:30px; font-weight:500;
+  color:var(--ink);
+}
+.stat-card .stat-value.warn{color:var(--danger);}
+.stat-card .stat-note{font-size:12.5px; color:var(--ink-faint); margin-top:6px;}
+
+/* ---------- alert list ---------- */
+.alert-card{margin-bottom:22px;}
+.alert-title{
+  font-size:13.5px; font-weight:600; color:var(--accent-dark);
+  margin-bottom:10px; display:flex; align-items:center; gap:6px;
+}
+.alert-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 0; border-top:1px solid var(--border-soft);
+  font-size:14px;
+}
+.alert-row:first-of-type{border-top:none;}
+.alert-name{color:var(--ink);}
+.alert-meta{color:var(--ink-faint); font-size:12.5px;}
+.pill{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:3px 10px; border-radius:100px;
+  font-size:12px; font-weight:500;
+}
+.pill-ok{background:var(--sage-tint); color:var(--sage);}
+.pill-warn{background:var(--amber-tint); color:var(--amber);}
+.pill-danger{background:var(--danger-tint); color:var(--danger);}
+.pill-muted{background:var(--surface-2); color:var(--ink-faint);}
+
+/* ---------- table ---------- */
+.table-wrap{
+  background:var(--white); border:1px solid var(--border-soft);
+  border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);
+}
+table{width:100%; border-collapse:collapse; font-size:13.8px;}
+thead th{
+  text-align:left; font-weight:600; color:var(--ink-soft);
+  font-size:12px; letter-spacing:0.02em;
+  padding:11px 14px; background:var(--surface);
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody td{
+  padding:11px 14px; border-bottom:1px solid var(--border-soft);
+  vertical-align:middle;
+  color:var(--ink);
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#FBF8F1;}
+td.num,th.num{text-align:right; font-variant-numeric:tabular-nums;}
+.group-row td{
+  background:var(--surface); font-weight:600; color:var(--accent-dark);
+  font-size:12.5px; padding:8px 14px;
+}
+.mono{font-variant-numeric:tabular-nums;}
+.muted{color:var(--ink-faint);}
+.item-name{font-weight:500;}
+.item-code{font-size:12px; color:var(--ink-faint);}
+
+/* editable input in table */
+.edit-input{
+  width:72px; padding:5px 7px; font-size:13.5px;
+  border:1px solid var(--border); border-radius:6px;
+  background:var(--bg); color:var(--ink);
+  font-family:inherit; text-align:right;
+}
+.edit-input:focus{outline:none; border-color:var(--accent); background:var(--white);}
+.edit-input.price{width:64px;}
+
+/* ---------- buttons ---------- */
+.btn{
+  font-family:inherit; font-size:13.5px; font-weight:500;
+  padding:7px 14px; border-radius:7px; border:1px solid var(--border);
+  background:var(--white); color:var(--ink); cursor:pointer;
+  transition:all .12s ease;
+}
+.btn:hover{border-color:var(--ink-faint);}
+.btn-accent{background:var(--accent); border-color:var(--accent); color:#fff;}
+.btn-accent:hover{background:var(--accent-dark); border-color:var(--accent-dark);}
+.btn-sm{padding:5px 10px; font-size:12.5px; border-radius:6px;}
+.btn-ghost{background:transparent; border-color:transparent; color:var(--accent-dark);}
+.btn-ghost:hover{background:var(--accent-tint);}
+.btn-ghost.danger{color:var(--danger);}
+.btn-ghost.danger:hover{background:var(--danger-tint);}
+.action-row{display:flex; gap:8px; align-items:center;}
+.qty-input{
+  width:56px; padding:5px 7px; border:1px solid var(--border);
+  border-radius:6px; font-size:13.5px; text-align:center; font-family:inherit;
+  background:var(--bg);
+}
+.qty-input:focus{outline:none; border-color:var(--accent); background:var(--white);}
+
+/* ---------- toast ---------- */
+#toast{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:var(--bg);
+  padding:11px 20px; border-radius:8px; font-size:13.5px;
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  z-index:100; box-shadow:0 8px 24px rgba(0,0,0,0.2);
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* ---------- menu / drink cards ---------- */
+.drink-card{
+  background:var(--white); border:1px solid var(--border-soft);
+  border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);
+}
+.drink-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;}
+.drink-title{font-family:'Fraunces',serif; font-size:16.5px; font-weight:500; color:var(--ink);}
+.drink-series{font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
+.drink-margin{font-size:12px; font-weight:600; padding:3px 9px; border-radius:100px; white-space:nowrap;}
+.margin-good{background:var(--sage-tint); color:var(--sage);}
+.margin-mid{background:var(--amber-tint); color:var(--amber);}
+.margin-low{background:var(--danger-tint); color:var(--danger);}
+.margin-none{background:var(--surface-2); color:var(--ink-faint);}
+.ingredient-list{font-size:12.5px; color:var(--ink-soft); margin:10px 0; line-height:1.7;}
+.ingredient-list span{color:var(--ink-faint);}
+.drink-nums{
+  display:flex; justify-content:space-between; align-items:center;
+  border-top:1px solid var(--border-soft); padding-top:10px; margin-top:4px;
+  font-size:13px;
+}
+.drink-nums .cost{color:var(--ink-faint);}
+.price-edit{display:flex; align-items:center; gap:4px;}
+.price-edit input{
+  width:60px; padding:4px 6px; border:1px solid var(--border); border-radius:6px;
+  font-family:inherit; font-size:13.5px; text-align:right; background:var(--bg);
+}
+
+/* section divider label */
+.series-label{
+  font-size:12.5px; font-weight:600; color:var(--accent-dark);
+  margin:26px 0 10px 0; padding-bottom:6px; border-bottom:1px solid var(--border);
+  text-transform:none;
+}
+.series-label:first-child{margin-top:0;}
+
+.empty-note{
+  font-size:13px; color:var(--ink-faint); padding:30px 0; text-align:center;
+}
+
+/* ---------- new: clickable stat card ---------- */
+.stat-card.clickable{cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;}
+.stat-card.clickable:hover{transform:translateY(-2px); box-shadow:0 4px 14px rgba(42,37,32,0.10), 0 10px 26px rgba(42,37,32,0.07);}
+
+/* ---------- material name link + tag ---------- */
+.link-name{
+  background:none; border:none; padding:0; margin:0; font:inherit; cursor:pointer;
+  color:var(--ink); font-weight:500; text-align:left;
+  border-bottom:1px dotted var(--ink-faint);
+}
+.link-name:hover{color:var(--accent-dark); border-bottom-color:var(--accent);}
+.tiny-tag{
+  display:inline-block; margin-left:6px; font-size:10.5px; padding:1px 6px;
+  border-radius:100px; background:var(--surface-2); color:var(--ink-faint);
+}
+
+/* ---------- form card (add material / add drink) ---------- */
+.form-card{margin-bottom:16px;}
+.form-title{font-weight:600; font-size:14px; color:var(--ink); margin-bottom:10px;}
+.form-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+}
+@media(max-width:700px){.form-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.form-grid{grid-template-columns:1fr;}}
+.form-grid label{
+  display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:var(--ink-soft);
+}
+.form-grid input, .form-grid select{
+  padding:7px 9px; border:1px solid var(--border); border-radius:7px;
+  font-family:inherit; font-size:13.5px; background:var(--bg); color:var(--ink);
+}
+.form-grid input:focus, .form-grid select:focus{outline:none; border-color:var(--accent); background:var(--white);}
+
+/* ---------- ingredient input rows (add drink) ---------- */
+.ing-input-row{
+  display:grid; grid-template-columns:2fr 1fr 90px auto; gap:8px; margin-bottom:8px; align-items:center;
+}
+.ing-input-row input, .ing-input-row select{
+  padding:7px 9px; border:1px solid var(--border); border-radius:7px;
+  font-family:inherit; font-size:13.5px; background:var(--bg); color:var(--ink);
+}
+.ing-row{display:flex; justify-content:space-between; gap:8px;}
+.ing-cost{color:var(--ink-faint); font-variant-numeric:tabular-nums;}
+
+/* ---------- modal ---------- */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(42,37,32,0.35);
+  display:flex; align-items:center; justify-content:center; z-index:200; padding:20px;
+}
+.modal-card{
+  background:var(--white); border-radius:14px; padding:22px 24px;
+  max-width:400px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.modal-title{font-family:'Fraunces',serif; font-size:18px; font-weight:500; margin-bottom:4px;}
+.modal-sub{font-size:12.5px; color:var(--ink-faint); margin-bottom:14px;}
+.modal-row{
+  display:flex; justify-content:space-between; gap:12px; padding:8px 0;
+  border-top:1px solid var(--border-soft); font-size:13.5px;
+}
+.modal-row:first-of-type{border-top:none;}
+.modal-row span:first-child{color:var(--ink-faint);}
+.modal-form-block{margin-top:14px; padding-top:12px; border-top:1px solid var(--border-soft);}
+.modal-block-title{font-size:12.5px; color:var(--ink-soft); margin-bottom:8px; font-weight:600;}
+
+/* ---------- quick log cards (異動紀錄) ---------- */
+.quick-log-card{display:flex; flex-direction:column; gap:7px;}
+.quick-log-title{font-size:11.5px; color:var(--ink-faint);}
+.quick-log-big{font-family:'Fraunces',serif; font-size:19px; font-weight:500; margin-bottom:4px; color:var(--ink);}
+.edit-input.full{width:100%;}
+.btn.full{width:100%; text-align:center;}
+
+/* ---------- category chips ---------- */
+.chip-row{
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;
+}
+.chip{
+  font-family:inherit; font-size:12.5px; padding:6px 13px; border-radius:100px;
+  border:1px solid var(--border); background:var(--white); color:var(--ink-soft); cursor:pointer;
+  transition:all .12s ease;
+}
+.chip:hover{border-color:var(--accent);}
+.chip-active{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500;}
+.modal-wide{max-width:560px;}
+
+footer.appfoot{
+  text-align:center; color:var(--ink-faint); font-size:12px;
+  padding:30px 0 10px 0;
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SEED_STATE = {"materials": [{"category": "花草香料類", "name": "洋甘菊", "unit": "g", "unit_price": 1.5, "per_spoon_g": 0.3, "used_items": [], "stock": 264, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$450/半斤", "origin": "克羅埃西亞", "note": "", "hidden": false}, {"category": "花草香料類", "name": "迷迭香", "unit": "g", "unit_price": 0.6667, "per_spoon_g": 0.5, "used_items": [], "stock": 72.5, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$25/兩", "origin": "埃及", "note": "", "hidden": false}, {"category": "花草香料類", "name": "玫瑰", "unit": "g", "unit_price": 2.6667, "per_spoon_g": 0.22, "used_items": [], "stock": 30.6, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$100/兩", "origin": "伊朗", "note": "", "hidden": false}, {"category": "花草香料類", "name": "薰衣草", "unit": "g", "unit_price": 1.3333, "per_spoon_g": 0.28, "used_items": [], "stock": 35.6, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$50/兩", "origin": "法國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "鼠尾草", "unit": "g", "unit_price": 1.0667, "per_spoon_g": 0.25, "used_items": [], "stock": 29.6, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$40/兩", "origin": "埃及", "note": "", "hidden": false}, {"category": "花草香料類", "name": "甜菊葉", "unit": "g", "unit_price": 0.95, "per_spoon_g": 0.25, "used_items": [], "stock": 250.4, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$285/300g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "洛神花", "unit": "g", "unit_price": 2.3333, "per_spoon_g": 0.4, "used_items": [], "stock": 67.4, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$210/90g", "origin": "台灣", "note": "", "hidden": false}, {"category": "花草香料類", "name": "橙皮", "unit": "g", "unit_price": 0.32, "per_spoon_g": 0.85, "used_items": [], "stock": 73, "safety_stock": 0, "vendor": "平易行（三鳳中街）", "spec": "$32/100g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "桂花", "unit": "g", "unit_price": 2.35, "per_spoon_g": 0.35, "used_items": [], "stock": 84.7, "safety_stock": 0, "vendor": "平易行（三鳳中街）", "spec": "$235/100g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "薄荷", "unit": "g", "unit_price": 1.8667, "per_spoon_g": 0.25, "used_items": [], "stock": 31.4, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$70/兩", "origin": "埃及", "note": "", "hidden": false}, {"category": "花草香料類", "name": "香蜂草", "unit": "g", "unit_price": 1.1417, "per_spoon_g": 0.18, "used_items": [], "stock": 59.4, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$685/600g", "origin": "埃及", "note": "", "hidden": false}, {"category": "花草香料類", "name": "檸檬草", "unit": "g", "unit_price": 0.525, "per_spoon_g": 0.31, "used_items": [], "stock": 122, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$315/600g", "origin": "越南", "note": "", "hidden": false}, {"category": "花草香料類", "name": "馬鞭草", "unit": "g", "unit_price": 1.4324, "per_spoon_g": 0.3, "used_items": [], "stock": 26.5, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$53/37g", "origin": "摩洛哥", "note": "", "hidden": false}, {"category": "花草香料類", "name": "肉桂粉", "unit": "g", "unit_price": 2.1667, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": " 旺來興（小磨坊）", "spec": "$65/30g", "origin": "台灣", "note": "", "hidden": false}, {"category": "花草香料類", "name": "馬薩拉香料粉", "unit": "g", "unit_price": 3.8, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "旺來興（新光洋菜）", "spec": "$95/25g", "origin": "台灣", "note": "", "hidden": false}, {"category": "花草香料類", "name": "山茶花", "unit": "g", "unit_price": 1.2667, "per_spoon_g": 1.3, "used_items": [], "stock": 55.3, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$380/300g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "黃菊", "unit": "g", "unit_price": 1.7333, "per_spoon_g": 0.27, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$130/二兩", "origin": "台灣", "note": "", "hidden": false}, {"category": "花草香料類", "name": "檸檬片", "unit": "g", "unit_price": 1.525, "per_spoon_g": 1, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$61/40g", "origin": "台灣", "note": "", "hidden": false}, {"category": "花草香料類", "name": "百香果", "unit": "g", "unit_price": 1, "per_spoon_g": 1.1, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$150/150g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "絲路", "unit": "g", "unit_price": 1.75, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$525/300g", "origin": "台灣", "note": "", "hidden": false}, {"category": "花草香料類", "name": "紫草根", "unit": "g", "unit_price": 1.05, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$105/100g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "橙花", "unit": "g", "unit_price": 1.4, "per_spoon_g": 0.24, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$105/75g", "origin": "伊朗", "note": "", "hidden": false}, {"category": "花草香料類", "name": "菩提葉", "unit": "g", "unit_price": 1.6154, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$105/65g", "origin": "歐洲", "note": "", "hidden": false}, {"category": "花草香料類", "name": "百里香", "unit": "g", "unit_price": 0.8462, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$55/65g", "origin": "摩洛哥", "note": "", "hidden": false}, {"category": "花草香料類", "name": "蘋果花", "unit": "g", "unit_price": 1.28, "per_spoon_g": 0.24, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "平易行（三鳳中街）", "spec": "$128/100g", "origin": "中國", "note": "", "hidden": false}, {"category": "花草香料類", "name": "馬鬱蘭", "unit": "g", "unit_price": 1.37, "per_spoon_g": 0.22, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "平易行（三鳳中街）", "spec": "$137/100g", "origin": "埃及", "note": "", "hidden": false}, {"category": "花草香料類", "name": "臘梅", "unit": "g", "unit_price": 3.85, "per_spoon_g": 0.25, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "平易行（三鳳中街）", "spec": "$385/100g", "origin": "中國", "note": "", "hidden": false}, {"category": "茶類", "name": "清香烏龍", "unit": "g", "unit_price": 0.225, "per_spoon_g": 0.64, "used_items": [], "stock": 612, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$135/斤", "origin": "台灣", "note": "", "hidden": false}, {"category": "茶類", "name": "白桃烏龍", "unit": "g", "unit_price": 0.75, "per_spoon_g": 1.01, "used_items": [], "stock": 606.5, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$450/斤", "origin": "台灣", "note": "", "hidden": false}, {"category": "茶類", "name": "紅烏龍", "unit": "g", "unit_price": 0.75, "per_spoon_g": 1.18, "used_items": [], "stock": 604, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$225/半斤", "origin": "越南", "note": "", "hidden": false}, {"category": "茶類", "name": "金萱", "unit": "g", "unit_price": 0.4333, "per_spoon_g": 0.8, "used_items": [], "stock": 539, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$130/半斤", "origin": "台灣", "note": "", "hidden": false}, {"category": "茶類", "name": "奶香金萱", "unit": "g", "unit_price": 0.35, "per_spoon_g": 0.7, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯鴻茶業有限公司（蝦皮）", "spec": "$210/600g", "origin": "台灣", "note": "", "hidden": false}, {"category": "茶類", "name": "澄韻紅茶", "unit": "g", "unit_price": 0.8333, "per_spoon_g": 0.45, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "促銷即期品（蝦皮）", "spec": "$125/150g", "origin": "台灣", "note": "", "hidden": false}, {"category": "茶類", "name": "手標紅茶葉", "unit": "g", "unit_price": 0.35, "per_spoon_g": 0.8, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "泰國Rak泰貿易代購（蝦皮）", "spec": "$140/400g", "origin": "泰國", "note": "", "hidden": false}, {"category": "茶類", "name": "香蘭葉", "unit": "g", "unit_price": 1.49, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "平易行（三鳳中街）", "spec": "$149/100g", "origin": "越南", "note": "", "hidden": false}, {"category": "茶類", "name": "香蘭綠茶", "unit": "g", "unit_price": 0.9286, "per_spoon_g": 0.3, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "熊熊屋（安全食品）（蝦皮）", "spec": "$65/70g", "origin": "越南", "note": "", "hidden": false}, {"category": "果茶類", "name": "草莓風味水果茶", "unit": "g", "unit_price": 0.6167, "per_spoon_g": 1.34, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$370/600g", "origin": "台灣", "note": "", "hidden": false}, {"category": "果茶類", "name": "蘋果風味水果茶", "unit": "g", "unit_price": 0.84, "per_spoon_g": 1.64, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "聯通漢方-迪化街（蝦皮）", "spec": "$210/250g", "origin": "台灣", "note": "", "hidden": false}, {"category": "茶類", "name": "毛峰綠茶", "unit": "g", "unit_price": 0.6083, "per_spoon_g": 0.5, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$365/斤", "origin": "越南", "note": "", "hidden": false}, {"category": "茶類", "name": "香蘭粉", "unit": "g", "unit_price": 6, "per_spoon_g": 0.2, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "豐慶商行（蝦皮）", "spec": "$12/2g", "origin": "台灣", "note": "", "hidden": false}, {"category": "果茶類", "name": "藍莓果茶", "unit": "g", "unit_price": 0.5, "per_spoon_g": 1.26, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "全健（三鳳中街）", "spec": "$150/半斤", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "多多(比菲多)", "unit": "ml", "unit_price": 0.044, "per_spoon_g": 50, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "萬家福(比菲多)", "spec": "$79/1795ml", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "牛奶", "unit": "ml", "unit_price": 0.111, "per_spoon_g": 95, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "E-Milk(初鹿鮮奶經銷)", "spec": "$105/946ml", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "淡奶", "unit": "ml", "unit_price": 0.239, "per_spoon_g": 5, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "旺來興(黑白淡奶-淡煉乳)", "spec": "$92/385ml", "origin": "荷蘭", "note": "", "hidden": false}, {"category": "特調材料", "name": "牛奶糖煉乳", "unit": "ml", "unit_price": 0.6333, "per_spoon_g": 5, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "旺來興(飛燕牛奶糖煉乳)", "spec": "$95/150ml", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "花生醬", "unit": "g", "unit_price": 0.4138, "per_spoon_g": 30, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "里仁(里仁花生醬-無加糖/無顆粒)", "spec": "$120/290g", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "檸檬汁", "unit": "ml", "unit_price": 0.18, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "旺來興(鉦純)", "spec": "$135/750ml", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "酸梅汁(烏梅汁)", "unit": "ml", "unit_price": 0.0621, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "Ｃostco(王品)", "spec": "$559/9000ml", "origin": "台灣", "note": "", "hidden": false}, {"category": "特調材料", "name": "蜂蜜", "unit": null, "unit_price": 0, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "", "spec": "", "origin": "", "note": "", "hidden": false}, {"category": "特調材料", "name": "珍珠", "unit": null, "unit_price": 0, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "", "spec": "", "origin": "", "note": "", "hidden": false}, {"category": "特調材料", "name": "椰果", "unit": null, "unit_price": 0, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "", "spec": "", "origin": "", "note": "", "hidden": false}, {"category": "包材類", "name": "杯子", "unit": "個", "unit_price": 1.7, "per_spoon_g": 1, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "廣新包裝容器（LINE訂購）", "spec": "$25500/15000個", "origin": "台灣", "note": "22oz冷熱90口徑客製化杯（可寄倉）", "hidden": false}, {"category": "包材類", "name": "吸管（粗/細）", "unit": "個", "unit_price": 0.2, "per_spoon_g": 1, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "可滋生活加工（淘寶）", "spec": "$500-900/5千個", "origin": "中國", "note": "報價為區間，單價沿用原表數值，無法用公式反推", "hidden": false}, {"category": "包材類", "name": "封膜", "unit": "個", "unit_price": 0.1833, "per_spoon_g": 1, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "封王實業（LINE訂購）", "spec": "$3300/6卷（每卷可封3000份）", "origin": "台灣", "note": "公版消光黑PE膜130mm*350mm，以箱(6卷)為單位配送，訂購後隔兩日到貨", "hidden": false}, {"category": "其他(免算項目)", "name": "冰塊", "unit": "g", "unit_price": 0, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "自製", "spec": "", "origin": "", "note": "", "hidden": false}, {"category": "其他(免算項目)", "name": "常溫水", "unit": "ml", "unit_price": 0, "per_spoon_g": 0, "used_items": [], "stock": null, "safety_stock": 0, "vendor": "ＲＯ水", "spec": "", "origin": "", "note": "", "hidden": false}], "packaged": [{"code": "iBLM-01", "name": "招牌花烏", "series": "iNB", "drink_title": "iBLM-01 招牌花烏", "initial_stock": 19, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"白桃烏龍": 8.585, "洋甘菊": 2.1, "薰衣草": 0.14, "鼠尾草": 0.16}}, {"code": "iBLM-02", "name": "泰式花紅", "series": "iNB", "drink_title": "iBLM-02 泰式花紅", "initial_stock": 28, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"手標紅茶葉": 8, "澄韻紅茶": 1.575, "香蘭葉": 1.8, "迷迭香": 0.5}}, {"code": "iBLM-03", "name": "金檸花萱", "series": "iNB", "drink_title": "iBLM-03 金檸花萱", "initial_stock": 25, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"金萱": 7.2, "馬鞭草": 0.3, "香蜂草": 0.27, "薄荷": 0.125, "檸檬草": 0.93}}, {"code": "iBLM-04", "name": "香蘭花萱", "series": "iNB", "drink_title": "iBLM-04 香蘭花萱", "initial_stock": 7, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"紅烏龍": 9.44, "金萱": 3.2, "香蘭葉": 3, "迷迭香": 0.25, "玫瑰": 0.22, "洋甘菊": 0.3}}, {"code": "iBLM-05", "name": "蘋果草莓花青", "series": "iNB", "drink_title": "iBLM-05 蘋果草莓花青", "initial_stock": 1, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"蘋果風味水果茶": 8.2, "草莓風味水果茶": 6.7, "金萱": 1.2, "洋甘菊": 0.6, "洛神花": 0.4, "薄荷": 0.125, "桂花": 0.7, "橙皮": 1, "甜菊葉": 0.5}}, {"code": "MLK-012", "name": "桂捲花", "series": "MILK", "drink_title": "MLK-012 桂捲花", "initial_stock": 0, "safety_stock": 5, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"奶香金萱": 6.3, "山茶花": 1.3, "香蜂草": 0.36, "馬鞭草": 0.3, "甜菊葉": 4, "牛奶": 95, "淡奶": 5, "肉桂粉": 0.25}}, {"code": "ORD-06", "name": "普綠", "series": "ORDINAY", "drink_title": "ORD-06／普綠", "initial_stock": 3, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"香蘭綠茶": 4}}, {"code": "ORD-07", "name": "常紅", "series": "ORDINAY", "drink_title": "ORD-07／常紅", "initial_stock": 0, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"澄韻紅茶": 4, "甜菊葉": 0.13}}, {"code": "ORD-08", "name": "萱青", "series": "ORDINAY", "drink_title": "ORD-08／萱青", "initial_stock": 17, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"奶香金萱": 7}}, {"code": "ORD-09", "name": "清烏", "series": "ORDINAY", "drink_title": "ORD-09／清烏", "initial_stock": 28, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"清香烏龍": 6.4, "香蘭綠茶": 0.5}}, {"code": "SUGAR-01", "name": "糖度包／微糖（甜菊葉0.25g）", "series": "糖度包", "drink_title": "糖度包／微糖（甜菊葉0.25g）", "initial_stock": 10, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"甜菊葉": 0.25}}, {"code": "SUGAR-02", "name": "糖度包／全糖（甜菊葉0.5g）", "series": "糖度包", "drink_title": "糖度包／全糖（甜菊葉0.5g）", "initial_stock": 30, "safety_stock": 10, "packaged_total": 0, "sold_total": 0, "scrapped_total": 0, "recipe_per_packet": {"甜菊葉": 0.5}}], "drinks": [{"title": "iBLM-01 招牌花烏", "series": "iNB", "ingredients": [{"name": "白桃烏龍", "amount": 8.5, "unit": "匙"}, {"name": "洋甘菊", "amount": 7, "unit": "匙"}, {"name": "薰衣草", "amount": 0.5, "unit": "匙"}, {"name": "鼠尾草", "amount": 0.16, "unit": "g"}], "price": 49}, {"title": "MLK-01 招牌花烏（奶）", "series": "MILK", "ingredients": [{"name": "白桃烏龍", "amount": 8.5, "unit": "匙"}, {"name": "洋甘菊", "amount": 7, "unit": "匙"}, {"name": "薰衣草", "amount": 0.5, "unit": "匙"}, {"name": "鼠尾草", "amount": 0.16, "unit": "g"}, {"name": "牛奶", "amount": 95, "unit": "ml"}, {"name": "淡奶", "amount": 5, "unit": "ml"}], "price": 75}, {"title": "iBLM-05 蘋果草莓花青", "series": "iNB", "ingredients": [{"name": "蘋果風味水果茶", "amount": 5, "unit": "匙"}, {"name": "草莓風味水果茶", "amount": 5, "unit": "匙"}, {"name": "金萱", "amount": 1.5, "unit": "匙"}, {"name": "洋甘菊", "amount": 2, "unit": "匙"}, {"name": "洛神花", "amount": 0.4, "unit": "g"}, {"name": "薄荷", "amount": 0.5, "unit": "匙"}, {"name": "桂花", "amount": 2, "unit": "匙"}, {"name": "橙皮", "amount": 1, "unit": "g"}, {"name": "甜菊葉", "amount": 0.5, "unit": "g"}], "price": 59}, {"title": "ACD-05 蘋果草莓花青（多）", "series": "ACD", "ingredients": [{"name": "蘋果風味水果茶", "amount": 5, "unit": "匙"}, {"name": "草莓風味水果茶", "amount": 5, "unit": "匙"}, {"name": "金萱", "amount": 1.5, "unit": "匙"}, {"name": "洋甘菊", "amount": 2, "unit": "匙"}, {"name": "洛神花", "amount": 0.4, "unit": "g"}, {"name": "薄荷", "amount": 0.5, "unit": "匙"}, {"name": "桂花", "amount": 2, "unit": "匙"}, {"name": "橙皮", "amount": 1, "unit": "g"}, {"name": "甜菊葉", "amount": 0.5, "unit": "g"}, {"name": "多多(比菲多)", "amount": 50, "unit": "ml"}], "price": 75}, {"title": "iBLM-04 香蘭花萱", "series": "iNB", "ingredients": [{"name": "紅烏龍", "amount": 8, "unit": "匙"}, {"name": "金萱", "amount": 4, "unit": "匙"}, {"name": "香蘭葉", "amount": 3, "unit": "g"}, {"name": "迷迭香", "amount": 0.5, "unit": "匙"}, {"name": "玫瑰", "amount": 1, "unit": "匙"}, {"name": "洋甘菊", "amount": 1, "unit": "匙"}], "price": 55}, {"title": "MLK-04 香蘭花萱（奶）", "series": "MILK", "ingredients": [{"name": "紅烏龍", "amount": 8, "unit": "匙"}, {"name": "金萱", "amount": 4, "unit": "匙"}, {"name": "香蘭葉", "amount": 3, "unit": "g"}, {"name": "迷迭香", "amount": 0.5, "unit": "匙"}, {"name": "玫瑰", "amount": 1, "unit": "匙"}, {"name": "洋甘菊", "amount": 1, "unit": "匙"}, {"name": "牛奶", "amount": 95, "unit": "ml"}, {"name": "淡奶", "amount": 5, "unit": "ml"}], "price": 85}, {"title": "iBLM-02 泰式花紅", "series": "iNB", "ingredients": [{"name": "手標紅茶葉", "amount": 8, "unit": "g"}, {"name": "澄韻紅茶", "amount": 3.5, "unit": "匙"}, {"name": "香蘭葉", "amount": 1.8, "unit": "g"}, {"name": "迷迭香", "amount": 1, "unit": "匙"}], "price": 49}, {"title": "MLK-02 泰式花紅（奶）", "series": "MILK", "ingredients": [{"name": "手標紅茶葉", "amount": 8, "unit": "g"}, {"name": "澄韻紅茶", "amount": 3.5, "unit": "匙"}, {"name": "香蘭葉", "amount": 1.8, "unit": "g"}, {"name": "迷迭香", "amount": 1, "unit": "匙"}, {"name": "牛奶", "amount": 95, "unit": "ml"}, {"name": "淡奶", "amount": 5, "unit": "ml"}], "price": 75}, {"title": "iBLM-03 金檸花萱", "series": "iNB", "ingredients": [{"name": "金萱", "amount": 9, "unit": "匙"}, {"name": "馬鞭草", "amount": 0.3, "unit": "g"}, {"name": "香蜂草", "amount": 1.5, "unit": "匙"}, {"name": "薄荷", "amount": 0.5, "unit": "匙"}, {"name": "檸檬草", "amount": 3, "unit": "匙"}], "price": 49}, {"title": "ACD-03 金檸花萱（多）", "series": "ACD", "ingredients": [{"name": "金萱", "amount": 9, "unit": "匙"}, {"name": "馬鞭草", "amount": 0.3, "unit": "g"}, {"name": "香蜂草", "amount": 1.5, "unit": "匙"}, {"name": "薄荷", "amount": 0.5, "unit": "匙"}, {"name": "檸檬草", "amount": 3, "unit": "匙"}, {"name": "多多(比菲多)", "amount": 50, "unit": "ml"}], "price": 65}, {"title": "MLK-012 桂捲花", "series": "MILK", "ingredients": [{"name": "奶香金萱", "amount": 9, "unit": "匙"}, {"name": "山茶花", "amount": 1.3, "unit": "g"}, {"name": "香蜂草", "amount": 2, "unit": "匙"}, {"name": "馬鞭草", "amount": 0.3, "unit": "g"}, {"name": "甜菊葉", "amount": 4, "unit": "g"}, {"name": "牛奶", "amount": 95, "unit": "ml"}, {"name": "淡奶", "amount": 5, "unit": "ml"}, {"name": "肉桂粉", "amount": 0.25, "unit": "g"}], "price": 80}, {"title": "MLK-013 薩拉花（奶）", "series": "MILK", "ingredients": [{"name": "奶香金萱", "amount": 9, "unit": "匙"}, {"name": "山茶花", "amount": 1.3, "unit": "g"}, {"name": "香蜂草", "amount": 2, "unit": "匙"}, {"name": "馬鞭草", "amount": 0.3, "unit": "g"}, {"name": "甜菊葉", "amount": 0.5, "unit": "g"}, {"name": "牛奶", "amount": 95, "unit": "ml"}, {"name": "淡奶", "amount": 5, "unit": "ml"}, {"name": "馬薩拉香料粉", "amount": 0.35, "unit": "g"}], "price": 80}, {"title": "MLK-014 花生醬（奶）", "series": "MILK", "ingredients": [{"name": "花生醬", "amount": 20, "unit": "g"}, {"name": "牛奶", "amount": 100, "unit": "ml"}, {"name": "淡奶", "amount": 55, "unit": "ml"}, {"name": "常溫水", "amount": 150, "unit": "ml"}, {"name": "冰塊", "amount": 300, "unit": "g"}], "price": 89}, {"title": "ACD-015 檬多（多）", "series": "ACD", "ingredients": [{"name": "檸檬汁", "amount": 30, "unit": "ml"}, {"name": "多多(比菲多)", "amount": 100, "unit": "ml"}, {"name": "常溫水", "amount": 160, "unit": "ml"}], "price": 55}, {"title": "ACD-017 檬烏梅", "series": "ACD", "ingredients": [{"name": "檸檬汁", "amount": 30, "unit": "ml"}, {"name": "酸梅汁(烏梅汁)", "amount": 70, "unit": "ml"}, {"name": "常溫水", "amount": 200, "unit": "ml"}], "price": 50}, {"title": "ACD-016 檸檬蜜烏龍山", "series": "ACD", "ingredients": [], "price": 55}, {"title": "ACD-018 烏烏梅", "series": "ACD", "ingredients": [{"name": "洛神花", "amount": 3, "unit": null}, {"name": "酸梅汁(烏梅汁)", "amount": 100, "unit": null}], "price": 45}, {"title": "ORD-06／普綠", "series": "ORDINAY", "ingredients": [{"name": "香蘭綠茶", "amount": 4, "unit": "g"}], "price": 38}, {"title": "ORD-07／常紅", "series": "ORDINAY", "ingredients": [{"name": "澄韻紅茶", "amount": 4, "unit": "g"}, {"name": "甜菊葉", "amount": 0.13, "unit": "g"}], "price": 38}, {"title": "ORD-08／萱青", "series": "ORDINAY", "ingredients": [{"name": "奶香金萱", "amount": 7, "unit": "g"}], "price": 38}, {"title": "ORD-09／清烏", "series": "ORDINAY", "ingredients": [{"name": "清香烏龍", "amount": 10, "unit": "匙"}, {"name": "香蘭綠茶", "amount": 0.5, "unit": "g"}], "price": 38}, {"title": "ORD-10／綠烏", "series": "ORDINAY", "ingredients": [{"name": "清香烏龍", "amount": 3.29, "unit": "g"}, {"name": "香蘭綠茶", "amount": 1.37, "unit": "g"}], "price": 38}], "material_log": [], "packaged_log": []};
+
+// ============================================================
+// 山花 in(BLOOM) 後台管理系統
+// ============================================================
+let state = null;
+let currentTab = 'dashboard';
+let materialsFilter = null;   // 'low' | null
+let packagedFilter = null;    // 'low' | null
+let showHiddenMaterials = false;
+let downloadsAPI = null;
+
+// Google Apps Script Web App URL backing this system's data (Google Sheet).
+// No Claude sign-in needed to read or write here -- anyone with the page
+// link can use it, since this fetches a public Apps Script endpoint rather
+// than Claude's own (organization-only) db capability.
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbzA37fe5wixqaQZUVR2r8VIlp7F8i0R-jjImCtDilKc16RNNzF_eT2DQqShK_9QYRQwwA/exec';
+
+// True whenever `state` is NOT confirmed to be the real data from the
+// Google Sheet (e.g. the initial GET failed, or a later re-sync failed).
+// saveState() refuses to write to the backend while this is true, because
+// writing here would overwrite the sheet's real data with stale/seed data
+// -- this is what previously caused "my edits disappeared".
+let usingFallbackData = false;
+
+async function fetchBackend(retries){
+  let lastErr = null;
+  for(let i=0; i<=retries; i++){
+    try{
+      const res = await fetch(BACKEND_URL, { method: 'GET', cache: 'no-store' });
+      if(!res.ok) throw new Error('bad status ' + res.status);
+      const data = await res.json();
+      if(data && Array.isArray(data.materials)){
+        return data;
+      }
+      throw new Error('unexpected response shape');
+    }catch(e){
+      lastErr = e;
+      if(i < retries) await new Promise(r=>setTimeout(r, 500));
+    }
+  }
+  throw lastErr;
+}
+
+async function initDb(){
+  try{ downloadsAPI = await claude.use('downloads'); }catch(e){ downloadsAPI = null; }
+
+  try{
+    state = await fetchBackend(1);
+    usingFallbackData = false;
+  }catch(e){
+    state = SEED_STATE;
+    usingFallbackData = true;
+    showToast('無法連線到試算表，暫時顯示預設資料（此畫面上的變更暫不會儲存，請重新整理後再試）');
+  }
+  render();
+}
+
+let saveTimer = null;
+function saveState(){
+  return new Promise((resolve)=>{
+    if(usingFallbackData){
+      // Refuse to save: state isn't confirmed to be the real sheet data,
+      // so saving now would overwrite the sheet with stale/seed data.
+      showToast('尚未連上試算表，這個變更沒有儲存，請重新整理頁面後再試一次');
+      resolve();
+      return;
+    }
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async ()=>{
+      try{
+        // text/plain avoids a CORS preflight; Apps Script still parses the
+        // body as JSON on its side regardless of the declared content type.
+        const res = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(state),
+        });
+        if(!res.ok) throw new Error('bad status ' + res.status);
+        const result = await res.json();
+        if(result.status !== 'ok') throw new Error(result.message || 'unknown error');
+      }catch(err){
+        showToast('儲存失敗，變更僅暫存在畫面上，請檢查網路連線後重新整理再試一次');
+      }
+      resolve();
+    }, 350);
+  });
+}
+
+// ---------- utils ----------
+function fmt(n, d=2){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  const r = Math.round(n * Math.pow(10,d)) / Math.pow(10,d);
+  return r.toLocaleString('zh-Hant', {minimumFractionDigits: (r%1===0? 0:Math.min(d,2)), maximumFractionDigits:d});
+}
+function fmtMoney(n){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return '$' + fmt(n,2);
+}
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function nowStamp(){
+  const d = new Date();
+  const date = todayISO();
+  const time = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  return {date, time, sort: d.getTime()};
+}
+function monthKey(iso){ return iso.slice(0,7); }
+function findMaterial(name){ return state.materials.find(m=>m.name===name); }
+function findPackaged(code){ return state.packaged.find(p=>p.code===code); }
+
+function materialStatus(m){
+  if(m.stock === null || m.stock === undefined) return {label:'尚未填寫', cls:'pill-muted'};
+  if(m.safety_stock === null || m.safety_stock === undefined || m.safety_stock === 0){
+    return {label:'✅ 正常', cls:'pill-ok'};
+  }
+  if(m.stock <= m.safety_stock) return {label:'⚠️ 需補貨', cls:'pill-warn'};
+  return {label:'✅ 正常', cls:'pill-ok'};
+}
+function isMaterialLow(m){
+  return !!(m.safety_stock && m.stock !== null && m.stock <= m.safety_stock);
+}
+function packagedCurrentStock(p){
+  return (p.initial_stock||0) + (p.packaged_total||0) - (p.sold_total||0) - (p.scrapped_total||0);
+}
+function packagedStatus(p){
+  const cur = packagedCurrentStock(p);
+  if(!p.safety_stock) return {label:'✅ 正常', cls:'pill-ok'};
+  if(cur <= p.safety_stock) return {label:'⚠️ 需補貨', cls:'pill-warn'};
+  return {label:'✅ 正常', cls:'pill-ok'};
+}
+function isPackagedLow(p){
+  return !!(p.safety_stock && packagedCurrentStock(p) <= p.safety_stock);
+}
+
+function computePackCost(){
+  return state.materials.filter(m=>m.category==='包材類').reduce((s,m)=> s + (m.unit_price||0), 0);
+}
+function ingredientGrams(ing){
+  const m = findMaterial(ing.name);
+  if(ing.unit === '匙' && m && m.per_spoon_g){
+    return ing.amount * m.per_spoon_g;
+  }
+  return ing.amount;
+}
+function ingredientCost(ing){
+  const m = findMaterial(ing.name);
+  const grams = ingredientGrams(ing);
+  const price = m ? (m.unit_price||0) : 0;
+  return grams * price;
+}
+function computeDrinkCost(drink){
+  const packcost = computePackCost();
+  let matcost = 0;
+  drink.ingredients.forEach(ing=>{ matcost += ingredientCost(ing); });
+  const total = packcost + matcost;
+  const price = drink.price;
+  const margin = (price && price>0) ? (price-total)/price : null;
+  return {packcost, matcost, total, price, margin};
+}
+function marginClass(margin){
+  if(margin === null || margin === undefined) return 'margin-none';
+  if(margin >= 0.7) return 'margin-good';
+  if(margin >= 0.6) return 'margin-mid';
+  return 'margin-low';
+}
+function marginLabel(margin){
+  if(margin === null || margin === undefined) return '尚未定價';
+  return (margin*100).toFixed(1) + '%';
+}
+function operatingStatus(margin){
+  if(margin === null || margin === undefined) return {label:'—', cls:'pill-muted'};
+  if(margin >= 0.7) return {label:'🟢 理想', cls:'pill-ok'};
+  if(margin >= 0.6) return {label:'🟡 可接受', cls:'pill-warn'};
+  return {label:'🔴 需檢視', cls:'pill-danger'};
+}
+function materialCategories(){
+  return [...new Set(state.materials.map(m=>m.category).filter(Boolean))];
+}
+function drinkSeriesList(){
+  return [...new Set(state.drinks.map(d=>d.series).filter(Boolean))];
+}
+function recipeFromIngredients(ingredients){
+  const recipe = {};
+  ingredients.forEach(ing=>{
+    const grams = ingredientGrams(ing);
+    recipe[ing.name] = (recipe[ing.name]||0) + grams;
+  });
+  return recipe;
+}
+function monthlyPurchaseCost(){
+  const mk = monthKey(todayISO());
+  return state.material_log
+    .filter(l=>l.type==='入庫' && monthKey(l.date)===mk)
+    .reduce((s,l)=>s + (l.qty * (l.unit_price_snapshot||0)), 0);
+}
+function logMaterialMovement(material, type, qty, resultingStock, note){
+  const stamp = nowStamp();
+  const m = findMaterial(material);
+  state.material_log.unshift({
+    date: stamp.date, time: stamp.time, sort: stamp.sort,
+    material, type, qty, resulting_stock: resultingStock,
+    unit_price_snapshot: m ? (m.unit_price||0) : 0,
+    note: note || '',
+  });
+  if(state.material_log.length > 400){
+    state.material_log = state.material_log.slice(0, 400);
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+
+// ---------- actions ----------
+async function actionRestock(materialName, amount, note){
+  const m = findMaterial(materialName);
+  if(!m) return;
+  m.stock = (m.stock || 0) + amount;
+  logMaterialMovement(materialName, '入庫', amount, m.stock, note || '登記進貨');
+  await saveState();
+  showToast(`${materialName} 已進貨 ${fmt(amount)} ${m.unit||''}`);
+  render();
+}
+async function actionScrap(materialName, amount, note){
+  const m = findMaterial(materialName);
+  if(!m || !amount) return;
+  m.stock = (m.stock || 0) - amount;
+  logMaterialMovement(materialName, '報廢', -amount, m.stock, note || '報廢');
+  await saveState();
+  showToast(`${materialName} 已報廢 ${fmt(amount)} ${m.unit||''}`);
+  render();
+}
+async function actionAdjust(materialName, newValue, note){
+  const m = findMaterial(materialName);
+  if(!m || newValue===null || isNaN(newValue)) return;
+  const delta = newValue - (m.stock||0);
+  m.stock = newValue;
+  logMaterialMovement(materialName, '調整', delta, m.stock, note || '庫存調整');
+  await saveState();
+  showToast(`${materialName} 庫存已調整為 ${fmt(newValue)} ${m.unit||''}`);
+  render();
+}
+async function actionManualOut(materialName, amount, note){
+  const m = findMaterial(materialName);
+  if(!m || !amount) return;
+  m.stock = (m.stock || 0) - amount;
+  logMaterialMovement(materialName, '出庫', -amount, m.stock, note || '出庫');
+  await saveState();
+  showToast(`${materialName} 已出庫 ${fmt(amount)} ${m.unit||''}`);
+  render();
+}
+async function actionSetSafety(materialName, val){
+  const m = findMaterial(materialName);
+  if(!m) return;
+  m.safety_stock = val;
+  await saveState();
+}
+async function actionUpdateMaterialInfo(materialName, updates){
+  const m = findMaterial(materialName);
+  if(!m) return;
+  Object.assign(m, updates);
+  await saveState();
+  showToast(`${materialName} 資料已更新`);
+  render();
+}
+async function actionSetMaterialStock(materialName, val){
+  const m = findMaterial(materialName);
+  if(!m) return;
+  m.stock = val;
+  await saveState();
+}
+async function actionToggleHideMaterial(materialName){
+  const m = findMaterial(materialName);
+  if(!m) return;
+  m.hidden = !m.hidden;
+  await saveState();
+  render();
+}
+async function actionDeleteMaterial(materialName){
+  const idx = state.materials.findIndex(m=>m.name===materialName);
+  if(idx===-1) return;
+  state.materials.splice(idx,1);
+  await saveState();
+  showToast(`已刪除原料「${materialName}」`);
+  render();
+}
+async function actionDeleteDrink(title){
+  const idx = state.drinks.findIndex(d=>d.title===title);
+  if(idx===-1) return;
+  state.drinks.splice(idx,1);
+  await saveState();
+  showToast(`已刪除飲品「${title}」`);
+  render();
+}
+async function actionAddMaterial(data){
+  if(state.materials.some(m=>m.name===data.name)){
+    showToast('已經有同名的原料了');
+    return false;
+  }
+  state.materials.push({
+    category: data.category || '其他', name: data.name, unit: data.unit || 'g',
+    unit_price: data.unit_price || 0, per_spoon_g: data.per_spoon_g || 0,
+    used_items: [], stock: data.stock || 0, safety_stock: data.safety_stock || 0,
+    vendor: data.vendor || '', spec: data.spec || '', origin: data.origin || '',
+    note: '', hidden:false,
+  });
+  await saveState();
+  showToast(`已新增原料「${data.name}」`);
+  return true;
+}
+
+async function actionPackage(code, qty){
+  const p = findPackaged(code);
+  if(!p || !qty) return;
+  p.packaged_total = (p.packaged_total||0) + qty;
+  let shortages = [];
+  Object.entries(p.recipe_per_packet).forEach(([matName, gramsPer])=>{
+    const m = findMaterial(matName);
+    if(m){
+      const used = gramsPer*qty;
+      m.stock = (m.stock||0) - used;
+      logMaterialMovement(matName, '出庫', -used, m.stock, `包裝「${p.name}」×${qty}`);
+      if(m.stock < 0) shortages.push(matName);
+    }
+  });
+  await saveState();
+  if(shortages.length){
+    showToast(`已記錄包裝 ${qty} 份，但 ${shortages.join('、')} 庫存已變成負數，請確認`);
+  }else{
+    showToast(`${p.name} 今日包裝 +${qty}`);
+  }
+  render();
+}
+async function actionSell(code, qty){
+  const p = findPackaged(code);
+  if(!p || !qty) return;
+  p.sold_total = (p.sold_total||0) + qty;
+  await saveState();
+  showToast(`${p.name} 已扣除使用/售出 ${qty}`);
+  render();
+}
+async function actionSetPackagedSafety(code, val){
+  const p = findPackaged(code);
+  if(!p) return;
+  p.safety_stock = val;
+  await saveState();
+}
+async function actionScrapPackaged(code, qty, note){
+  const p = findPackaged(code);
+  if(!p || !qty) return;
+  p.scrapped_total = (p.scrapped_total||0) + qty;
+  const stamp = nowStamp();
+  state.packaged_log.unshift({date:stamp.date, time:stamp.time, code, name:p.name, type:'報廢', qty:-qty, note: note||''});
+  await saveState();
+  showToast(`${p.name} 已報廢 ${fmt(qty)}`);
+  render();
+}
+async function actionSetPrice(title, val){
+  const d = state.drinks.find(x=>x.title===title);
+  if(!d) return;
+  d.price = val;
+  await saveState();
+}
+async function actionUpdateDrinkIngredients(title, newIngredients){
+  const d = state.drinks.find(x=>x.title===title);
+  if(!d) return;
+  d.ingredients = newIngredients;
+  const p = state.packaged.find(x=>x.drink_title===title || x.code===title);
+  if(p){
+    p.recipe_per_packet = recipeFromIngredients(newIngredients);
+  }
+  await saveState();
+  showToast(`「${title}」配方已更新`);
+  render();
+}
+async function actionAddDrink(data){
+  if(state.drinks.some(d=>d.title===data.title)){
+    showToast('已經有同名的飲品了');
+    return false;
+  }
+  const drink = {
+    title: data.title, series: data.series || '其他',
+    ingredients: data.ingredients, price: data.price || null,
+  };
+  state.drinks.push(drink);
+  // auto-sync into 商品庫存
+  const code = data.code || data.title;
+  if(!findPackaged(code)){
+    state.packaged.push({
+      code: code, name: data.title, series: drink.series, drink_title: data.title,
+      initial_stock: 0, safety_stock: 0, packaged_total: 0, sold_total: 0, scrapped_total: 0,
+      recipe_per_packet: recipeFromIngredients(data.ingredients),
+    });
+  }
+  await saveState();
+  showToast(`已新增飲品「${data.title}」，並同步到商品庫存`);
+  return true;
+}
+
+function navigateToLowMaterials(){
+  currentTab = 'materials';
+  materialsFilter = 'low';
+  showHiddenMaterials = true; // so hidden low-stock items aren't missed
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function navigateToLowPackaged(){
+  currentTab = 'packaged';
+  packagedFilter = 'low';
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+
+// ---------- rendering ----------
+function esc(s){
+  if(s===null||s===undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderDashboard(){
+  const lowMaterials = state.materials.filter(isMaterialLow);
+  const lowPackaged = state.packaged.filter(isPackagedLow);
+  const totalDrinks = state.drinks.length;
+  const pricedDrinks = state.drinks.filter(d=>d.price).length;
+  const avgMargin = (()=>{
+    const margins = state.drinks.map(d=>computeDrinkCost(d).margin).filter(x=>x!==null);
+    if(!margins.length) return null;
+    return margins.reduce((a,b)=>a+b,0)/margins.length;
+  })();
+  const monthCost = monthlyPurchaseCost();
+  const mk = monthKey(todayISO());
+  const monthLabel = mk.split('-')[0]+'年'+parseInt(mk.split('-')[1])+'月';
+
+  return `
+    <div class="section-head">
+      <div>
+        <div class="section-title">總覽</div>
+        <div class="section-desc">庫存與菜單狀況一目了然</div>
+      </div>
+    </div>
+    <div class="grid grid-4" style="margin-bottom:24px;">
+      <div class="card stat-card clickable" data-nav="low-materials">
+        <div class="stat-label">原料需補貨</div>
+        <div class="stat-value ${lowMaterials.length?'warn':''}">${lowMaterials.length}</div>
+        <div class="stat-note">${lowMaterials.length ? '點一下查看是哪些品項 →' : '目前沒有低於安全庫存的原料'}</div>
+      </div>
+      <div class="card stat-card clickable" data-nav="low-packaged">
+        <div class="stat-label">商品需補貨</div>
+        <div class="stat-value ${lowPackaged.length?'warn':''}">${lowPackaged.length}</div>
+        <div class="stat-note">${lowPackaged.length ? '點一下查看是哪些商品 →' : '目前沒有低於安全庫存的商品'}</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">平均毛利率</div>
+        <div class="stat-value">${avgMargin!==null ? (avgMargin*100).toFixed(1)+'%' : '—'}</div>
+        <div class="stat-note">${pricedDrinks} / ${totalDrinks} 品項已定價</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-label">${monthLabel}原物料進貨總成本</div>
+        <div class="stat-value">${fmtMoney(monthCost)}</div>
+        <div class="stat-note">依「＋進貨」登記自動累計</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMaterials(){
+  const hiddenCount = state.materials.filter(m=>m.hidden).length;
+  let list = state.materials;
+  if(materialsFilter==='low') list = list.filter(isMaterialLow);
+  if(categoryFilter) list = list.filter(m=>m.category===categoryFilter);
+  if(!showHiddenMaterials) list = list.filter(m=>!m.hidden || (materialsFilter==='low' && isMaterialLow(m)));
+
+  const groups = {};
+  const order = [];
+  list.forEach(m=>{
+    const g = m.category || '其他';
+    if(!groups[g]){ groups[g]=[]; order.push(g); }
+    groups[g].push(m);
+  });
+
+  let rows = '';
+  if(!list.length){
+    rows = `<tr><td colspan="8" class="empty-note">沒有符合條件的原料</td></tr>`;
+  }
+  order.forEach(cat=>{
+    rows += `<tr class="group-row" id="cat-${esc(cat)}"><td colspan="8">${esc(cat)}</td></tr>`;
+    groups[cat].forEach(m=>{
+      const st = materialStatus(m);
+      rows += `<tr>
+        <td>
+          <button class="link-name" data-action="open-material-edit" data-name="${esc(m.name)}">${esc(m.name)}</button>
+          ${m.hidden?'<span class="tiny-tag">已隱藏</span>':''}
+        </td>
+        <td class="num mono">${fmtMoney(m.unit_price)} / ${esc(m.unit||'')}</td>
+        <td class="num mono">${m.stock===null?'—':fmt(m.stock)+' '+esc(m.unit||'')}</td>
+        <td class="num"><input class="edit-input" type="number" step="any" value="${m.safety_stock||''}" data-action="safety" data-name="${esc(m.name)}"></td>
+        <td><span class="pill ${st.cls}">${st.label}</span></td>
+        <td>
+          <div class="action-row">
+            <input class="qty-input" type="number" step="any" placeholder="數量" data-restock-input="${esc(m.name)}">
+            <button class="btn btn-sm btn-accent" data-action="restock" data-name="${esc(m.name)}">＋ 進貨</button>
+            <button class="btn btn-sm btn-ghost" data-action="open-scrap" data-name="${esc(m.name)}">報廢／調整</button>
+          </div>
+        </td>
+        <td><button class="btn btn-sm btn-ghost" data-action="toggle-hide" data-name="${esc(m.name)}">${m.hidden?'顯示':'隱藏'}</button></td>
+        <td><button class="btn btn-sm btn-ghost danger" data-action="delete-material" data-name="${esc(m.name)}">刪除</button></td>
+      </tr>`;
+    });
+  });
+
+  const cats = materialCategories();
+  const catChips = `
+    <div class="chip-row">
+      <button class="chip ${!categoryFilter?'chip-active':''}" data-action="cat-filter" data-cat="">全部分類</button>
+      ${cats.map(c=>`<button class="chip ${categoryFilter===c?'chip-active':''}" data-action="cat-filter" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+    </div>`;
+
+  return `
+    <div class="section-head">
+      <div>
+        <div class="section-title">原料庫存</div>
+        <div class="section-desc">設定安全庫存、登記進貨；庫存會在商品包裝時自動扣除</div>
+      </div>
+      <div class="action-row" style="flex-wrap:wrap;">
+        ${materialsFilter==='low' ? `<button class="btn btn-sm" data-action="clear-materials-filter">清除篩選（顯示全部）</button>` : ''}
+        <button class="btn btn-sm" data-action="toggle-show-hidden">${showHiddenMaterials?'隱藏已隱藏品項':`顯示已隱藏品項 (${hiddenCount})`}</button>
+        <button class="btn btn-sm" data-action="export-excel">⬇ 匯出 Excel 總覽表</button>
+        <button class="btn btn-sm btn-accent" data-action="open-add-material">＋ 新增原料</button>
+      </div>
+    </div>
+    ${catChips}
+    <div id="add-material-form"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>材料</th><th class="num">單價</th><th class="num">目前庫存</th>
+          <th class="num">安全庫存</th><th>狀態</th><th>登記進貨</th><th>顯示</th><th>刪除</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderAddMaterialForm(){
+  const categories = [...new Set(state.materials.map(m=>m.category).filter(Boolean))];
+  return `
+    <div class="card form-card">
+      <div class="form-title">新增原料</div>
+      <div class="form-grid">
+        <label>名稱 <input id="nm-name" type="text" placeholder="例如：茉莉花"></label>
+        <label>分類 <input id="nm-category" list="cat-list" type="text" placeholder="例如：花草香料類">
+          <datalist id="cat-list">${categories.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+        </label>
+        <label>單位 <select id="nm-unit"><option value="g">g</option><option value="ml">ml</option><option value="個">個</option></select></label>
+        <label>單價（每g/ml/個） <input id="nm-price" type="number" step="any" placeholder="0"></label>
+        <label>1匙＝多少g/ml（若用匙計量） <input id="nm-spoon" type="number" step="any" placeholder="選填"></label>
+        <label>廠商 <input id="nm-vendor" type="text" placeholder="選填"></label>
+        <label>產地 <input id="nm-origin" type="text" placeholder="選填"></label>
+        <label>規格 <input id="nm-spec" type="text" placeholder="例如：$100/兩"></label>
+        <label>目前庫存 <input id="nm-stock" type="number" step="any" placeholder="0"></label>
+        <label>安全庫存 <input id="nm-safety" type="number" step="any" placeholder="0"></label>
+      </div>
+      <div class="action-row" style="margin-top:12px;">
+        <button class="btn btn-accent" data-action="submit-add-material">新增</button>
+        <button class="btn" data-action="cancel-add-material">取消</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderMaterialEditModal(name){
+  const m = findMaterial(name);
+  if(!m) return '';
+  const cats = materialCategories();
+  return `
+    <div class="modal-backdrop" data-action="close-modal">
+      <div class="modal-card" data-action="stop">
+        <div class="modal-title">${esc(m.name)}</div>
+        <div class="modal-sub">編輯這項原料的基本資料（名稱無法修改，避免配方對不上）</div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+          <label>分類 <input id="me-category" list="me-cat-list" type="text" value="${esc(m.category||'')}">
+            <datalist id="me-cat-list">${cats.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+          </label>
+          <label>單位 <select id="me-unit">
+            <option value="g" ${m.unit==='g'?'selected':''}>g</option>
+            <option value="ml" ${m.unit==='ml'?'selected':''}>ml</option>
+            <option value="個" ${m.unit==='個'?'selected':''}>個</option>
+          </select></label>
+          <label>單價（每g/ml/個） <input id="me-price" type="number" step="any" value="${m.unit_price||0}"></label>
+          <label>1匙＝多少g/ml <input id="me-spoon" type="number" step="any" value="${m.per_spoon_g||''}"></label>
+          <label>廠商 / 品牌 <input id="me-vendor" type="text" value="${esc(m.vendor||'')}"></label>
+          <label>產地 <input id="me-origin" type="text" value="${esc(m.origin||'')}"></label>
+          <label style="grid-column:1/-1;">採購規格 <input id="me-spec" type="text" value="${esc(m.spec||'')}"></label>
+        </div>
+        <div class="action-row" style="margin-top:14px;">
+          <button class="btn btn-accent" data-action="save-material-edit" data-name="${esc(m.name)}">儲存</button>
+          <button class="btn" data-action="close-modal">取消</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderConfirmModal(cfg){
+  if(!cfg) return '';
+  return `
+    <div class="modal-backdrop" data-action="close-confirm-modal">
+      <div class="modal-card" data-action="stop">
+        <div class="modal-title">請確認</div>
+        <div class="modal-sub" style="white-space:pre-wrap;">${esc(cfg.message)}</div>
+        <div class="action-row" style="margin-top:14px;">
+          <button class="btn" data-action="close-confirm-modal" style="flex:1;">取消</button>
+          <button class="btn btn-accent" data-action="confirm-yes" style="flex:1;">確定刪除</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderScrapModal(name){
+  const m = findMaterial(name);
+  if(!m) return '';
+  return `
+    <div class="modal-backdrop" data-action="close-scrap-modal">
+      <div class="modal-card" data-action="stop">
+        <div class="modal-title">${esc(m.name)} — 報廢／庫存調整</div>
+        <div class="modal-sub">目前庫存：${m.stock===null?'—':fmt(m.stock)+' '+esc(m.unit||'')}</div>
+        <div class="modal-form-block">
+          <div class="modal-block-title">報廢（輸入要扣除的數量）</div>
+          <div class="action-row">
+            <input class="qty-input" id="scrap-qty" type="number" step="any" placeholder="數量">
+            <input class="edit-input" id="scrap-note" type="text" placeholder="原因（選填）" style="width:120px;">
+            <button class="btn btn-sm btn-accent" data-action="submit-scrap" data-name="${esc(m.name)}">報廢</button>
+          </div>
+        </div>
+        <div class="modal-form-block">
+          <div class="modal-block-title">庫存調整（直接輸入正確的庫存數量）</div>
+          <div class="action-row">
+            <input class="qty-input" id="adjust-qty" type="number" step="any" placeholder="正確數量">
+            <input class="edit-input" id="adjust-note" type="text" placeholder="原因（選填）" style="width:120px;">
+            <button class="btn btn-sm btn-accent" data-action="submit-adjust" data-name="${esc(m.name)}">調整</button>
+          </div>
+        </div>
+        <button class="btn" style="margin-top:10px;width:100%;" data-action="close-scrap-modal">關閉</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPackagedScrapModal(code){
+  const p = findPackaged(code);
+  if(!p) return '';
+  return `
+    <div class="modal-backdrop" data-action="close-pkg-scrap-modal">
+      <div class="modal-card" data-action="stop">
+        <div class="modal-title">${esc(p.name)} — 報廢</div>
+        <div class="modal-sub">目前庫存：${fmt(packagedCurrentStock(p))}</div>
+        <div class="action-row">
+          <input class="qty-input" id="pkg-scrap-qty" type="number" step="any" placeholder="數量">
+        </div>
+        <div class="action-row" style="margin-top:8px;">
+          <input class="edit-input full" id="pkg-scrap-note" type="text" placeholder="報廢原因（必填，例如：過期、賣相不佳）">
+        </div>
+        <div class="action-row" style="margin-top:14px;">
+          <button class="btn btn-accent" data-action="submit-pkg-scrap" data-code="${esc(p.code)}">確認報廢</button>
+          <button class="btn" data-action="close-pkg-scrap-modal">取消</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPackaged(){
+  let list = state.packaged;
+  if(packagedFilter==='low') list = list.filter(isPackagedLow);
+
+  const groups = {};
+  const order = [];
+  list.forEach(p=>{
+    const g = p.series || '其他';
+    if(!groups[g]){ groups[g]=[]; order.push(g); }
+    groups[g].push(p);
+  });
+  let rows = '';
+  if(!list.length){
+    rows = `<tr><td colspan="7" class="empty-note">沒有符合條件的商品</td></tr>`;
+  }
+  order.forEach(series=>{
+    rows += `<tr class="group-row"><td colspan="7">${esc(series)}</td></tr>`;
+    groups[series].forEach(p=>{
+      const st = packagedStatus(p);
+      const cur = packagedCurrentStock(p);
+      rows += `<tr>
+        <td><div class="item-name">${esc(p.name)}</div><div class="item-code">${esc(p.code)}</div></td>
+        <td class="num mono">${fmt(cur)}</td>
+        <td class="num"><input class="edit-input" type="number" step="any" value="${p.safety_stock||''}" data-action="pkg-safety" data-code="${esc(p.code)}"></td>
+        <td class="num mono muted">${fmt(p.packaged_total)}</td>
+        <td class="num mono muted">${fmt(p.sold_total)}</td>
+        <td><span class="pill ${st.cls}">${st.label}</span></td>
+        <td>
+          <div class="action-row">
+            <input class="qty-input" type="number" step="any" placeholder="數量" data-pkg-input="${esc(p.code)}">
+            <button class="btn btn-sm btn-accent" data-action="pkg-add" data-code="${esc(p.code)}">今日包裝</button>
+            <button class="btn btn-sm" data-action="pkg-sell" data-code="${esc(p.code)}">今日使用</button>
+            <button class="btn btn-sm btn-ghost" data-action="open-pkg-scrap" data-code="${esc(p.code)}">報廢</button>
+          </div>
+        </td>
+      </tr>`;
+    });
+  });
+  return `
+    <div class="section-head">
+      <div>
+        <div class="section-title">商品庫存</div>
+        <div class="section-desc">「今日包裝」會自動扣除對應原料；「今日使用」只扣除商品庫存本身（賣出／消耗）；「報廢」需填寫原因</div>
+      </div>
+      <div class="action-row">
+        ${packagedFilter==='low' ? `<button class="btn btn-sm" data-action="clear-packaged-filter">清除篩選（顯示全部）</button>` : ''}
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>商品</th><th class="num">目前庫存</th><th class="num">安全庫存</th>
+          <th class="num">累計已包裝</th><th class="num">累計已使用</th><th>狀態</th><th>操作</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderMenu(){
+  let list = state.drinks;
+  if(drinkCategoryFilter) list = list.filter(d=>(d.series||'其他')===drinkCategoryFilter);
+
+  const groups = {};
+  const order = [];
+  list.forEach(d=>{
+    const s = d.series || '其他';
+    if(!groups[s]){ groups[s]=[]; order.push(s); }
+    groups[s].push(d);
+  });
+
+  let rows = '';
+  if(!list.length){
+    rows = `<tr><td colspan="7" class="empty-note">沒有符合條件的飲品</td></tr>`;
+  }
+  order.forEach(series=>{
+    rows += `<tr class="group-row"><td colspan="7">${esc(series)}</td></tr>`;
+    groups[series].forEach(d=>{
+      const c = computeDrinkCost(d);
+      const marginAmount = (c.price!==null && c.price!==undefined) ? (c.price - c.total) : null;
+      const ostat = operatingStatus(c.margin);
+      rows += `<tr>
+        <td><button class="link-name" data-action="open-drink-edit" data-title="${esc(d.title)}">${esc(d.title)}</button></td>
+        <td class="num mono">${fmtMoney(c.total)}</td>
+        <td class="num"><span>$</span><input class="edit-input price" type="number" step="1" value="${d.price===null||d.price===undefined?'':d.price}" data-action="price" data-title="${esc(d.title)}"></td>
+        <td class="num mono">${marginAmount!==null?fmtMoney(marginAmount):'—'}</td>
+        <td class="num mono">${marginLabel(c.margin)}</td>
+        <td><span class="pill ${ostat.cls}">${ostat.label}</span></td>
+        <td><button class="btn btn-sm btn-ghost danger" data-action="delete-drink" data-title="${esc(d.title)}">刪除</button></td>
+      </tr>`;
+    });
+  });
+
+  const seriesList = drinkSeriesList();
+  const chips = `
+    <div class="chip-row">
+      <button class="chip ${!drinkCategoryFilter?'chip-active':''}" data-action="drink-cat-filter" data-cat="">全部分類</button>
+      ${seriesList.map(s=>`<button class="chip ${drinkCategoryFilter===s?'chip-active':''}" data-action="drink-cat-filter" data-cat="${esc(s)}">${esc(s)}</button>`).join('')}
+    </div>`;
+
+  return `
+    <div class="section-head">
+      <div>
+        <div class="section-title">飲品總表</div>
+        <div class="section-desc">點品項名稱可以編輯配方；成本依原料目前單價即時計算</div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-sm" data-action="export-drinks-excel">⬇ 匯出飲品總表 Excel</button>
+        <button class="btn btn-sm btn-accent" data-action="open-add-drink">＋ 新增飲品</button>
+      </div>
+    </div>
+    ${chips}
+    <div id="add-drink-form"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>飲品名稱</th><th class="num">總成本</th><th class="num">售價</th>
+          <th class="num">毛利金額</th><th class="num">毛利率</th><th>經營狀態</th><th>刪除</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderDrinkEditModal(title){
+  const d = state.drinks.find(x=>x.title===title);
+  if(!d) return '';
+  const c = computeDrinkCost(d);
+  const matOptions = state.materials.map(m=>`<option value="${esc(m.name)}">`).join('');
+  const rowsHtml = d.ingredients.map((ing,idx)=>`
+    <div class="ing-input-row" data-idx="${idx}">
+      <input type="text" class="ed-ing-name" list="ed-material-list" value="${esc(ing.name)}" placeholder="材料名稱">
+      <input type="number" step="any" class="ed-ing-amount" value="${ing.amount}" placeholder="用量">
+      <select class="ed-ing-unit">
+        <option value="g" ${ing.unit==='g'?'selected':''}>g</option>
+        <option value="ml" ${ing.unit==='ml'?'selected':''}>ml</option>
+        <option value="匙" ${ing.unit==='匙'?'selected':''}>匙</option>
+      </select>
+      <span class="ing-cost">${fmtMoney(ingredientCost(ing))}</span>
+      <button class="btn btn-sm btn-ghost" data-action="remove-edit-ingredient-row" data-idx="${idx}">移除</button>
+    </div>
+  `).join('');
+  return `
+    <div class="modal-backdrop" data-action="close-drink-edit">
+      <div class="modal-card modal-wide" data-action="stop">
+        <div class="modal-title">${esc(d.title)}</div>
+        <div class="modal-sub">編輯配方，材料與用量會自動重算成本（總成本 ${fmtMoney(c.total)}，原料${fmtMoney(c.matcost)}＋包材${fmtMoney(c.packcost)}）</div>
+        <div id="ed-ingredients">${rowsHtml}</div>
+        <button class="btn btn-sm" data-action="add-edit-ingredient-row" style="margin-top:8px;">＋ 新增一項材料</button>
+        <datalist id="ed-material-list">${matOptions}</datalist>
+        <div class="action-row" style="margin-top:16px;">
+          <button class="btn btn-accent" data-action="save-drink-edit" data-title="${esc(d.title)}">儲存配方</button>
+          <button class="btn" data-action="close-drink-edit">取消</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAddDrinkForm(){
+  const seriesList = [...new Set(state.drinks.map(d=>d.series).filter(Boolean))];
+  const matOptions = state.materials.map(m=>`<option value="${esc(m.name)}">`).join('');
+  return `
+    <div class="card form-card">
+      <div class="form-title">新增飲品</div>
+      <div class="form-grid">
+        <label>品項名稱 <input id="nd-title" type="text" placeholder="例如：ACD-018／莓果氣泡"></label>
+        <label>系列 <input id="nd-series" list="series-list" type="text" placeholder="例如：複方水＋特調系列">
+          <datalist id="series-list">${seriesList.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
+        </label>
+        <label>售價 <input id="nd-price" type="number" step="1" placeholder="選填"></label>
+      </div>
+      <div class="form-title" style="margin-top:14px;">配方（材料 × 用量）</div>
+      <div id="nd-ingredients"></div>
+      <button class="btn btn-sm" data-action="add-ingredient-row" style="margin-top:8px;">＋ 新增一項材料</button>
+      <datalist id="material-list">${matOptions}</datalist>
+      <div class="action-row" style="margin-top:14px;">
+        <button class="btn btn-accent" data-action="submit-add-drink">新增</button>
+        <button class="btn" data-action="cancel-add-drink">取消</button>
+      </div>
+    </div>
+  `;
+}
+function renderIngredientRow(idx){
+  return `
+    <div class="ing-input-row" data-idx="${idx}">
+      <input type="text" class="ing-name" list="material-list" placeholder="材料名稱">
+      <input type="number" step="any" class="ing-amount" placeholder="用量">
+      <select class="ing-unit">
+        <option value="g">g</option><option value="ml">ml</option><option value="匙">匙</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" data-action="remove-ingredient-row" data-idx="${idx}">移除</button>
+    </div>
+  `;
+}
+
+function renderTabs(){
+  const tabs = [
+    {id:'dashboard', label:'總覽'},
+    {id:'materials', label:'原料庫存'},
+    {id:'packaged', label:'商品庫存'},
+    {id:'menu', label:'飲品總表'},
+    {id:'log', label:'異動紀錄'},
+  ];
+  return tabs.map(t=>`<button class="tab ${currentTab===t.id?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('');
+}
+
+function renderMain(){
+  if(currentTab==='dashboard') return renderDashboard();
+  if(currentTab==='materials') return renderMaterials();
+  if(currentTab==='packaged') return renderPackaged();
+  if(currentTab==='menu') return renderMenu();
+  if(currentTab==='log') return renderLog();
+  return '';
+}
+
+let uiState = { addMaterialOpen:false, addDrinkOpen:false, ingredientRows:1, materialEditModal:null, scrapModal:null, pkgScrapModal:null, drinkEditModal:null, confirmModal:null, _materialFormMounted:false, _drinkFormMounted:false };
+let categoryFilter = null;
+let drinkCategoryFilter = null;
+let logFilter = 'all';
+let logSearch = '';
+
+function renderLog(){
+  const typeMap = {all:'全部', '入庫':'入庫', '出庫':'出庫', '報廢':'報廢', '調整':'調整'};
+  let entries = state.material_log;
+  if(logFilter !== 'all') entries = entries.filter(l=>l.type===logFilter);
+  if(logSearch.trim()){
+    const q = logSearch.trim();
+    entries = entries.filter(l=> l.material.includes(q) || (l.note||'').includes(q));
+  }
+  const typeCls = {'入庫':'pill-ok','出庫':'pill-muted','報廢':'pill-danger','調整':'pill-warn'};
+
+  let rows = '';
+  if(!entries.length){
+    rows = `<tr><td colspan="6" class="empty-note">還沒有異動紀錄</td></tr>`;
+  }
+  entries.slice(0,200).forEach(l=>{
+    const sign = l.qty>0 ? '+' : '';
+    rows += `<tr>
+      <td class="muted">${esc(l.date)} ${esc(l.time||'')}</td>
+      <td class="item-name">${esc(l.material)}</td>
+      <td><span class="pill ${typeCls[l.type]||'pill-muted'}">${esc(l.type)}</span></td>
+      <td class="num mono">${sign}${fmt(l.qty)}</td>
+      <td class="num mono">${fmt(l.resulting_stock)}</td>
+      <td class="muted">${esc(l.note||'')}</td>
+    </tr>`;
+  });
+
+  const matOptions = state.materials.map(m=>`<option value="${esc(m.name)}">`).join('');
+
+  return `
+    <div class="section-head">
+      <div>
+        <div class="section-title">異動紀錄</div>
+        <div class="section-desc">進貨、出庫、報廢、調整都已經整合到原料庫存的操作按鈕裡；這裡是完整歷史紀錄</div>
+      </div>
+    </div>
+    <datalist id="log-mat-list">${matOptions}</datalist>
+    <div class="action-row" style="margin-bottom:14px; flex-wrap:wrap;">
+      ${Object.entries(typeMap).map(([k,label])=>`<button class="btn btn-sm ${logFilter===k?'btn-accent':''}" data-action="log-filter" data-type="${k}">${label}</button>`).join('')}
+      <input class="edit-input" style="width:160px;" id="log-search" placeholder="搜尋材料、備註…" value="${esc(logSearch)}">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>日期</th><th>材料</th><th>異動類型</th><th class="num">數量</th><th class="num">異動後庫存</th><th>備註</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function render(){
+  document.querySelector('.tabs').innerHTML = renderTabs();
+  const fb = document.getElementById('fallback-banner');
+  if(fb) fb.style.display = usingFallbackData ? '' : 'none';
+
+  // Once a multi-field "add" form is open and mounted, later render() calls
+  // (a background db sync echo, another action's re-render, etc.) must NOT
+  // rebuild `.main` -- that would wipe whatever the user has already typed,
+  // including any ingredient rows added via direct DOM manipulation below.
+  // Only the very first render after opening (or a fresh tab load) mounts it.
+  const skipMainRebuild =
+    (currentTab==='materials' && uiState.addMaterialOpen && uiState._materialFormMounted) ||
+    (currentTab==='menu' && uiState.addDrinkOpen && uiState._drinkFormMounted);
+
+  if(!skipMainRebuild){
+    document.querySelector('.main').innerHTML = renderMain();
+
+    if(currentTab==='materials'){
+      const holder = document.getElementById('add-material-form');
+      if(holder){
+        holder.innerHTML = uiState.addMaterialOpen ? renderAddMaterialForm() : '';
+        uiState._materialFormMounted = uiState.addMaterialOpen;
+      }
+    }
+    if(currentTab==='menu'){
+      const holder = document.getElementById('add-drink-form');
+      if(holder){
+        holder.innerHTML = uiState.addDrinkOpen ? renderAddDrinkForm() : '';
+        if(uiState.addDrinkOpen){
+          const wrap = document.getElementById('nd-ingredients');
+          wrap.innerHTML = '';
+          for(let i=0;i<uiState.ingredientRows;i++){
+            wrap.insertAdjacentHTML('beforeend', renderIngredientRow(i));
+          }
+        }
+        uiState._drinkFormMounted = uiState.addDrinkOpen;
+      }
+    }
+  }
+
+  let modalHolder = document.getElementById('modal-root');
+  if(!modalHolder){
+    modalHolder = document.createElement('div');
+    modalHolder.id = 'modal-root';
+    document.body.appendChild(modalHolder);
+  }
+  if(uiState.materialEditModal){
+    modalHolder.innerHTML = renderMaterialEditModal(uiState.materialEditModal);
+  }else if(uiState.scrapModal){
+    modalHolder.innerHTML = renderScrapModal(uiState.scrapModal);
+  }else if(uiState.pkgScrapModal){
+    modalHolder.innerHTML = renderPackagedScrapModal(uiState.pkgScrapModal);
+  }else if(uiState.drinkEditModal){
+    modalHolder.innerHTML = renderDrinkEditModal(uiState.drinkEditModal);
+  }else if(uiState.confirmModal){
+    modalHolder.innerHTML = renderConfirmModal(uiState.confirmModal);
+  }else{
+    modalHolder.innerHTML = '';
+  }
+}
+
+
+// ---------- excel export ----------
+async function downloadWorkbook(wb, filename){
+  if(!downloadsAPI){
+    showToast('這個畫面暫時無法匯出檔案，請稍後再試');
+    return;
+  }
+  const arrayBuf = XLSX.write(wb, {type:'array', bookType:'xlsx'});
+  const blob = new Blob([arrayBuf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  try{
+    await downloadsAPI.save({filename, data: blob});
+    showToast('已匯出 Excel');
+  }catch(err){
+    if(err && err.code === 'declined'){
+      // viewer said no, nothing to report
+    }else{
+      showToast('匯出失敗，請再試一次');
+    }
+  }
+}
+
+async function exportExcel(){
+  if(typeof XLSX === 'undefined'){
+    showToast('匯出功能載入中，請稍後再試一次');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  const matRows = [['分類','材料','廠商','產地','規格','單位','單價','目前庫存','安全庫存','庫存狀態','備註']];
+  state.materials.forEach(m=>{
+    matRows.push([m.category,m.name,m.vendor,m.origin,m.spec,m.unit,m.unit_price,
+      m.stock===null?'':m.stock, m.safety_stock, materialStatus(m).label, m.note||'']);
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(matRows);
+  XLSX.utils.book_append_sheet(wb, ws1, '原料總表');
+
+  const pkgRows = [['編號','品項','系列','目前庫存','安全庫存','累計已包裝','累計已使用','累計已報廢','庫存狀態']];
+  state.packaged.forEach(p=>{
+    pkgRows.push([p.code,p.name,p.series,packagedCurrentStock(p),p.safety_stock,p.packaged_total,p.sold_total,p.scrapped_total||0,packagedStatus(p).label]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(pkgRows);
+  XLSX.utils.book_append_sheet(wb, ws2, '商品庫存');
+
+  const ws3 = buildDrinksSheet();
+  XLSX.utils.book_append_sheet(wb, ws3, '飲品總表');
+
+  const logRows = [['日期','時間','材料','異動類型','數量','異動後庫存','備註']];
+  state.material_log.forEach(l=>{
+    logRows.push([l.date,l.time,l.material,l.type,l.qty,l.resulting_stock,l.note||'']);
+  });
+  const ws4 = XLSX.utils.aoa_to_sheet(logRows);
+  XLSX.utils.book_append_sheet(wb, ws4, '異動紀錄');
+
+  await downloadWorkbook(wb, `山花庫存總覽_${todayISO()}.xlsx`);
+}
+
+function buildDrinksSheet(){
+  const drRows = [['系列','品項','原料成本','包材成本','總成本','售價','毛利金額','毛利率','經營狀態']];
+  state.drinks.forEach(d=>{
+    const c = computeDrinkCost(d);
+    const marginAmount = (c.price!==null && c.price!==undefined) ? (c.price-c.total) : '';
+    drRows.push([d.series||'', d.title, c.matcost.toFixed(2), c.packcost.toFixed(2), c.total.toFixed(2),
+      d.price===null||d.price===undefined?'':d.price,
+      marginAmount===''?'':marginAmount.toFixed(2),
+      c.margin!==null?(c.margin*100).toFixed(1)+'%':'',
+      operatingStatus(c.margin).label]);
+  });
+  return XLSX.utils.aoa_to_sheet(drRows);
+}
+
+async function exportDrinksExcel(){
+  if(typeof XLSX === 'undefined'){
+    showToast('匯出功能載入中，請稍後再試一次');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = buildDrinksSheet();
+  XLSX.utils.book_append_sheet(wb, ws, '飲品總表');
+
+  // also break out each drink's recipe on its own sheet-friendly block,
+  // in one combined "配方明細" sheet so the whole cost picture is in one file
+  const recipeRows = [['系列','品項','材料','用量','單位','材料成本']];
+  state.drinks.forEach(d=>{
+    d.ingredients.forEach(ing=>{
+      recipeRows.push([d.series||'', d.title, ing.name, ing.amount, ing.unit||'', ingredientCost(ing).toFixed(2)]);
+    });
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(recipeRows);
+  XLSX.utils.book_append_sheet(wb, ws2, '配方明細');
+
+  await downloadWorkbook(wb, `山花飲品總表_${todayISO()}.xlsx`);
+}
+
+// ---------- events ----------
+function getVal(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+function getNum(id){ const v = parseFloat(getVal(id)); return isNaN(v) ? null : v; }
+
+function bindEvents(){
+  document.body.addEventListener('click', (e)=>{
+    const navBtn = e.target.closest('[data-nav]');
+    if(navBtn){
+      if(navBtn.dataset.nav==='low-materials') navigateToLowMaterials();
+      else if(navBtn.dataset.nav==='low-packaged') navigateToLowPackaged();
+      return;
+    }
+    const tabBtn = e.target.closest('[data-tab]');
+    if(tabBtn){
+      currentTab = tabBtn.dataset.tab;
+      if(currentTab!=='materials') materialsFilter=null;
+      if(currentTab!=='packaged') packagedFilter=null;
+      uiState._materialFormMounted = false;
+      uiState._drinkFormMounted = false;
+      render();
+      return;
+    }
+    const action = e.target.closest('[data-action]');
+    if(!action) return;
+    const act = action.dataset.action;
+
+    if(act==='restock'){
+      const name = action.dataset.name;
+      const input = document.querySelector(`[data-restock-input="${CSS.escape(name)}"]`);
+      const val = parseFloat(input.value);
+      if(!val){ showToast('請輸入進貨數量'); return; }
+      actionRestock(name, val);
+      input.value='';
+    }
+    else if(act==='pkg-add'){
+      const code = action.dataset.code;
+      const input = document.querySelector(`[data-pkg-input="${CSS.escape(code)}"]`);
+      const val = parseFloat(input.value);
+      if(!val){ showToast('請輸入包裝數量'); return; }
+      actionPackage(code, val);
+      input.value='';
+    }
+    else if(act==='pkg-sell'){
+      const code = action.dataset.code;
+      const input = document.querySelector(`[data-pkg-input="${CSS.escape(code)}"]`);
+      const val = parseFloat(input.value);
+      if(!val){ showToast('請輸入使用／售出數量'); return; }
+      actionSell(code, val);
+      input.value='';
+    }
+    else if(act==='toggle-hide'){
+      actionToggleHideMaterial(action.dataset.name);
+    }
+    else if(act==='delete-material'){
+      const name = action.dataset.name;
+      const usedIn = state.drinks.filter(d=>d.ingredients.some(i=>i.name===name)).map(d=>d.title);
+      const warn = usedIn.length ? `\n\n注意：這個材料還用在「${usedIn.join('、')}」的配方裡，刪除後那些飲品的成本會少算這一項。` : '';
+      uiState.confirmModal = { message: `確定要刪除原料「${name}」嗎？此動作無法復原。${warn}`, run: ()=>actionDeleteMaterial(name) };
+      render();
+    }
+    else if(act==='delete-drink'){
+      const title = action.dataset.title;
+      uiState.confirmModal = { message: `確定要刪除飲品「${title}」嗎？此動作無法復原（商品庫存裡對應的品項不會一併刪除）。`, run: ()=>actionDeleteDrink(title) };
+      render();
+    }
+    else if(act==='close-confirm-modal'){
+      uiState.confirmModal = null; render();
+    }
+    else if(act==='confirm-yes'){
+      const cfg = uiState.confirmModal;
+      uiState.confirmModal = null;
+      if(cfg && typeof cfg.run === 'function') cfg.run();
+      render();
+    }
+    else if(act==='toggle-show-hidden'){
+      showHiddenMaterials = !showHiddenMaterials;
+      render();
+    }
+    else if(act==='clear-materials-filter'){
+      materialsFilter = null; showHiddenMaterials=false; render();
+    }
+    else if(act==='clear-packaged-filter'){
+      packagedFilter = null; render();
+    }
+    else if(act==='export-excel'){
+      exportExcel();
+    }
+    else if(act==='export-drinks-excel'){
+      exportDrinksExcel();
+    }
+    else if(act==='open-add-material'){
+      uiState.addMaterialOpen = true; render();
+    }
+    else if(act==='cancel-add-material'){
+      uiState.addMaterialOpen = false; render();
+    }
+    else if(act==='submit-add-material'){
+      const name = getVal('nm-name').trim();
+      if(!name){ showToast('請輸入原料名稱'); return; }
+      actionAddMaterial({
+        name, category: getVal('nm-category').trim(), unit: getVal('nm-unit'),
+        unit_price: getNum('nm-price')||0, per_spoon_g: getNum('nm-spoon')||0,
+        vendor: getVal('nm-vendor').trim(), origin: getVal('nm-origin').trim(),
+        spec: getVal('nm-spec').trim(), stock: getNum('nm-stock')||0, safety_stock: getNum('nm-safety')||0,
+      }).then(ok=>{ if(ok){ uiState.addMaterialOpen=false; render(); } });
+    }
+    else if(act==='show-vendor' || act==='open-material-edit'){
+      uiState.materialEditModal = action.dataset.name; render();
+    }
+    else if(act==='close-modal'){
+      uiState.materialEditModal = null; render();
+    }
+    else if(act==='save-material-edit'){
+      const name = action.dataset.name;
+      actionUpdateMaterialInfo(name, {
+        category: getVal('me-category').trim(), unit: getVal('me-unit'),
+        unit_price: getNum('me-price')||0, per_spoon_g: getNum('me-spoon')||0,
+        vendor: getVal('me-vendor').trim(), origin: getVal('me-origin').trim(),
+        spec: getVal('me-spec').trim(),
+      }).then(()=>{ uiState.materialEditModal=null; render(); });
+    }
+    else if(act==='cat-filter'){
+      categoryFilter = action.dataset.cat || null; render();
+    }
+    else if(act==='drink-cat-filter'){
+      drinkCategoryFilter = action.dataset.cat || null; render();
+    }
+    else if(act==='open-scrap'){
+      uiState.scrapModal = action.dataset.name; render();
+    }
+    else if(act==='close-scrap-modal'){
+      uiState.scrapModal = null; render();
+    }
+    else if(act==='submit-scrap'){
+      const name = action.dataset.name;
+      const qty = getNum('scrap-qty');
+      if(!qty){ showToast('請輸入報廢數量'); return; }
+      actionScrap(name, qty, getVal('scrap-note').trim()).then(()=>{ uiState.scrapModal=null; render(); });
+    }
+    else if(act==='submit-adjust'){
+      const name = action.dataset.name;
+      const qty = getNum('adjust-qty');
+      if(qty===null){ showToast('請輸入正確的庫存數量'); return; }
+      actionAdjust(name, qty, getVal('adjust-note').trim()).then(()=>{ uiState.scrapModal=null; render(); });
+    }
+    else if(act==='open-add-drink'){
+      uiState.addDrinkOpen = true; uiState.ingredientRows = 1; render();
+    }
+    else if(act==='cancel-add-drink'){
+      uiState.addDrinkOpen = false; render();
+    }
+    else if(act==='add-ingredient-row'){
+      const wrap = document.getElementById('nd-ingredients');
+      if(wrap) wrap.insertAdjacentHTML('beforeend', renderIngredientRow(wrap.querySelectorAll('.ing-input-row').length));
+    }
+    else if(act==='remove-ingredient-row'){
+      const row = action.closest('.ing-input-row');
+      if(row) row.remove();
+    }
+    else if(act==='submit-add-drink'){
+      const title = getVal('nd-title').trim();
+      if(!title){ showToast('請輸入品項名稱'); return; }
+      const ingredients = [];
+      document.querySelectorAll('#nd-ingredients .ing-input-row').forEach(row=>{
+        const name = row.querySelector('.ing-name').value.trim();
+        const amount = parseFloat(row.querySelector('.ing-amount').value);
+        const unit = row.querySelector('.ing-unit').value;
+        if(name && !isNaN(amount)) ingredients.push({name, amount, unit});
+      });
+      if(!ingredients.length){ showToast('請至少新增一項材料配方'); return; }
+      actionAddDrink({
+        title, series: getVal('nd-series').trim() || '其他',
+        price: getNum('nd-price'), ingredients,
+      }).then(ok=>{ if(ok){ uiState.addDrinkOpen=false; render(); } });
+    }
+    else if(act==='open-pkg-scrap'){
+      uiState.pkgScrapModal = action.dataset.code; render();
+    }
+    else if(act==='close-pkg-scrap-modal'){
+      uiState.pkgScrapModal = null; render();
+    }
+    else if(act==='submit-pkg-scrap'){
+      const code = action.dataset.code;
+      const qty = getNum('pkg-scrap-qty');
+      const note = getVal('pkg-scrap-note').trim();
+      if(!qty){ showToast('請輸入報廢數量'); return; }
+      if(!note){ showToast('請填寫報廢原因'); return; }
+      actionScrapPackaged(code, qty, note).then(()=>{ uiState.pkgScrapModal=null; render(); });
+    }
+    else if(act==='open-drink-edit'){
+      uiState.drinkEditModal = action.dataset.title; render();
+    }
+    else if(act==='close-drink-edit'){
+      uiState.drinkEditModal = null; render();
+    }
+    else if(act==='add-edit-ingredient-row'){
+      const wrap = document.getElementById('ed-ingredients');
+      const idx = wrap.querySelectorAll('.ing-input-row').length;
+      wrap.insertAdjacentHTML('beforeend', `
+        <div class="ing-input-row" data-idx="${idx}">
+          <input type="text" class="ed-ing-name" list="ed-material-list" placeholder="材料名稱">
+          <input type="number" step="any" class="ed-ing-amount" placeholder="用量">
+          <select class="ed-ing-unit"><option value="g">g</option><option value="ml">ml</option><option value="匙">匙</option></select>
+          <span class="ing-cost">$0.00</span>
+          <button class="btn btn-sm btn-ghost" data-action="remove-edit-ingredient-row" data-idx="${idx}">移除</button>
+        </div>`);
+    }
+    else if(act==='remove-edit-ingredient-row'){
+      const row = action.closest('.ing-input-row');
+      if(row) row.remove();
+    }
+    else if(act==='save-drink-edit'){
+      const title = action.dataset.title;
+      const ingredients = [];
+      document.querySelectorAll('#ed-ingredients .ing-input-row').forEach(row=>{
+        const name = row.querySelector('.ed-ing-name').value.trim();
+        const amount = parseFloat(row.querySelector('.ed-ing-amount').value);
+        const unit = row.querySelector('.ed-ing-unit').value;
+        if(name && !isNaN(amount)) ingredients.push({name, amount, unit});
+      });
+      if(!ingredients.length){ showToast('至少要有一項材料'); return; }
+      actionUpdateDrinkIngredients(title, ingredients).then(()=>{ uiState.drinkEditModal=null; render(); });
+    }
+    else if(act==='log-filter'){
+      logFilter = action.dataset.type; render();
+    }
+    else if(act==='ql-submit'){
+      const type = action.dataset.type;
+      const map = {
+        '入庫': ['ql-in-name','ql-in-qty','ql-in-note'],
+        '出庫': ['ql-out-name','ql-out-qty','ql-out-note'],
+        '報廢': ['ql-scrap-name','ql-scrap-qty','ql-scrap-note'],
+        '調整': ['ql-adj-name','ql-adj-qty','ql-adj-note'],
+      };
+      const [nameId, qtyId, noteId] = map[type];
+      const name = getVal(nameId).trim();
+      const qty = getNum(qtyId);
+      const note = getVal(noteId).trim();
+      if(!name || !findMaterial(name)){ showToast('請輸入正確的材料名稱'); return; }
+      if(qty===null){ showToast('請輸入數量'); return; }
+      if(type==='入庫') actionRestock(name, qty, note);
+      else if(type==='出庫') actionManualOut(name, qty, note);
+      else if(type==='報廢') actionScrap(name, qty, note);
+      else if(type==='調整') actionAdjust(name, qty, note);
+    }
+  });
+
+  document.body.addEventListener('change', (e)=>{
+    const t = e.target;
+    if(t.dataset.action==='safety'){
+      actionSetSafety(t.dataset.name, parseFloat(t.value)||0);
+    }else if(t.dataset.action==='pkg-safety'){
+      actionSetPackagedSafety(t.dataset.code, parseFloat(t.value)||0);
+    }else if(t.dataset.action==='price'){
+      const v = t.value===''? null : parseFloat(t.value);
+      actionSetPrice(t.dataset.title, v);
+    }
+  });
+
+  document.body.addEventListener('input', (e)=>{
+    if(e.target.id==='log-search'){
+      logSearch = e.target.value;
+      render();
+      const el = document.getElementById('log-search');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    }
+  });
+
+  document.querySelector('.modal-root-click-guard');
+}
+
+async function init(){
+  document.getElementById('app').innerHTML = `
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand-row">
+          <div>
+            <div class="brand">
+              <span class="brand-mark">in(BLOOM) 山花</span>
+              <span class="brand-sub">後台管理系統</span>
+            </div>
+          </div>
+          <div class="brand-right">飲料成本與庫存管理</div>
+        </div>
+        <div class="tabs"></div>
+      </div>
+    </div>
+    <div id="fallback-banner" style="display:none;background:#fff3cd;color:#7a5c00;padding:8px 16px;text-align:center;font-size:13px;border-bottom:1px solid #f0d878;">
+      ⚠️ 目前無法連上試算表，畫面顯示的是預設資料，任何變更都不會被儲存。請重新整理頁面再試一次。
+    </div>
+    <div class="main"></div>
+    <footer class="appfoot">資料會自動同步儲存，重新整理也不會不見</footer>
+    <div id="toast"></div>
+  `;
+  bindEvents();
+  await initDb();
+}
+init();
+
+</script>
+</body>
+</html>
