@@ -608,7 +608,7 @@ async function actionRestock(materialName, amount, note){
   if(!m) return;
   m.stock = (m.stock || 0) + amount;
   logMaterialMovement(materialName, '入庫', amount, m.stock, note || '登記進貨');
-  await saveState();
+  saveState();
   showToast(`${materialName} 已進貨 ${fmt(amount)} ${m.unit||''}`);
   render();
 }
@@ -617,7 +617,7 @@ async function actionScrap(materialName, amount, note){
   if(!m || !amount) return;
   m.stock = (m.stock || 0) - amount;
   logMaterialMovement(materialName, '報廢', -amount, m.stock, note || '報廢');
-  await saveState();
+  saveState();
   showToast(`${materialName} 已報廢 ${fmt(amount)} ${m.unit||''}`);
   render();
 }
@@ -627,7 +627,7 @@ async function actionAdjust(materialName, newValue, note){
   const delta = newValue - (m.stock||0);
   m.stock = newValue;
   logMaterialMovement(materialName, '調整', delta, m.stock, note || '庫存調整');
-  await saveState();
+  saveState();
   showToast(`${materialName} 庫存已調整為 ${fmt(newValue)} ${m.unit||''}`);
   render();
 }
@@ -636,7 +636,7 @@ async function actionManualOut(materialName, amount, note){
   if(!m || !amount) return;
   m.stock = (m.stock || 0) - amount;
   logMaterialMovement(materialName, '出庫', -amount, m.stock, note || '出庫');
-  await saveState();
+  saveState();
   showToast(`${materialName} 已出庫 ${fmt(amount)} ${m.unit||''}`);
   render();
 }
@@ -644,13 +644,13 @@ async function actionSetSafety(materialName, val){
   const m = findMaterial(materialName);
   if(!m) return;
   m.safety_stock = val;
-  await saveState();
+  saveState();
 }
 async function actionUpdateMaterialInfo(materialName, updates){
   const m = findMaterial(materialName);
   if(!m) return;
   Object.assign(m, updates);
-  await saveState();
+  saveState();
   showToast(`${materialName} 資料已更新`);
   render();
 }
@@ -658,20 +658,20 @@ async function actionSetMaterialStock(materialName, val){
   const m = findMaterial(materialName);
   if(!m) return;
   m.stock = val;
-  await saveState();
+  saveState();
 }
 async function actionToggleHideMaterial(materialName){
   const m = findMaterial(materialName);
   if(!m) return;
   m.hidden = !m.hidden;
-  await saveState();
+  saveState();
   render();
 }
 async function actionDeleteMaterial(materialName){
   const idx = state.materials.findIndex(m=>m.name===materialName);
   if(idx===-1) return;
   state.materials.splice(idx,1);
-  await saveState();
+  saveState();
   showToast(`已刪除原料「${materialName}」`);
   render();
 }
@@ -679,7 +679,7 @@ async function actionDeleteDrink(title){
   const idx = state.drinks.findIndex(d=>d.title===title);
   if(idx===-1) return;
   state.drinks.splice(idx,1);
-  await saveState();
+  saveState();
   showToast(`已刪除飲品「${title}」`);
   render();
 }
@@ -695,7 +695,7 @@ async function actionAddMaterial(data){
     vendor: data.vendor || '', spec: data.spec || '', origin: data.origin || '',
     note: '', hidden:false,
   });
-  await saveState();
+  saveState();
   showToast(`已新增原料「${data.name}」`);
   return true;
 }
@@ -714,7 +714,7 @@ async function actionPackage(code, qty){
       if(m.stock < 0) shortages.push(matName);
     }
   });
-  await saveState();
+  saveState();
   if(shortages.length){
     showToast(`已記錄包裝 ${qty} 份，但 ${shortages.join('、')} 庫存已變成負數，請確認`);
   }else{
@@ -726,7 +726,7 @@ async function actionSell(code, qty){
   const p = findPackaged(code);
   if(!p || !qty) return;
   p.sold_total = (p.sold_total||0) + qty;
-  await saveState();
+  saveState();
   showToast(`${p.name} 已扣除使用/售出 ${qty}`);
   render();
 }
@@ -734,7 +734,7 @@ async function actionSetPackagedSafety(code, val){
   const p = findPackaged(code);
   if(!p) return;
   p.safety_stock = val;
-  await saveState();
+  saveState();
 }
 async function actionScrapPackaged(code, qty, note){
   const p = findPackaged(code);
@@ -742,7 +742,7 @@ async function actionScrapPackaged(code, qty, note){
   p.scrapped_total = (p.scrapped_total||0) + qty;
   const stamp = nowStamp();
   state.packaged_log.unshift({date:stamp.date, time:stamp.time, code, name:p.name, type:'報廢', qty:-qty, note: note||''});
-  await saveState();
+  saveState();
   showToast(`${p.name} 已報廢 ${fmt(qty)}`);
   render();
 }
@@ -750,7 +750,7 @@ async function actionSetPrice(title, val){
   const d = state.drinks.find(x=>x.title===title);
   if(!d) return;
   d.price = val;
-  await saveState();
+  saveState();
 }
 async function actionUpdateDrinkIngredients(title, newIngredients){
   const d = state.drinks.find(x=>x.title===title);
@@ -760,7 +760,7 @@ async function actionUpdateDrinkIngredients(title, newIngredients){
   if(p){
     p.recipe_per_packet = recipeFromIngredients(newIngredients);
   }
-  await saveState();
+  saveState();
   showToast(`「${title}」配方已更新`);
   render();
 }
@@ -783,7 +783,7 @@ async function actionAddDrink(data){
       recipe_per_packet: recipeFromIngredients(data.ingredients),
     });
   }
-  await saveState();
+  saveState();
   showToast(`已新增飲品「${data.title}」，並同步到商品庫存`);
   return true;
 }
