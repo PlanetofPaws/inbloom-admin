@@ -390,6 +390,8 @@ let currentTab = 'dashboard';
 let materialsFilter = null;   // 'low' | null
 let packagedFilter = null;    // 'low' | null
 let showHiddenMaterials = false;
+let showHiddenPackaged = false;
+let showHiddenDrinks = false;
 let downloadsAPI = null;
 
 // Google Apps Script Web App URL backing this system's data (Google Sheet).
@@ -492,6 +494,8 @@ function nowStamp(){
 function monthKey(iso){ return iso.slice(0,7); }
 function findMaterial(name){ return state.materials.find(m=>m.name===name); }
 function findPackaged(code){ return state.packaged.find(p=>p.code===code); }
+function findLinkedPackaged(drinkTitle){ return state.packaged.find(p=>p.drink_title===drinkTitle || p.code===drinkTitle); }
+function findLinkedDrink(packagedItem){ return state.drinks.find(d=>d.title===packagedItem.drink_title || d.title===packagedItem.code); }
 
 function materialStatus(m){
   if(m.stock === null || m.stock === undefined) return {label:'尚未填寫', cls:'pill-muted'};
@@ -687,6 +691,45 @@ async function actionDeleteDrink(title){
   showToast(`已刪除飲品「${title}」`);
   render();
 }
+async function actionDeletePackaged(code){
+  const idx = state.packaged.findIndex(p=>p.code===code);
+  if(idx===-1) return;
+  const name = state.packaged[idx].name;
+  state.packaged.splice(idx,1);
+  saveState();
+  showToast(`已刪除商品「${name}」`);
+  render();
+}
+async function actionToggleHideDrink(title){
+  const d = state.drinks.find(x=>x.title===title);
+  if(!d) return;
+  d.hidden = !d.hidden;
+  const p = findLinkedPackaged(title);
+  if(p){
+    p.hidden = d.hidden;
+    saveState();
+    showToast(`「${title}」已${d.hidden?'隱藏':'顯示'}（飲品總表與商品庫存同步更新）`);
+  }else{
+    saveState();
+    showToast(`「${title}」已${d.hidden?'隱藏':'顯示'}`);
+  }
+  render();
+}
+async function actionToggleHidePackaged(code){
+  const p = findPackaged(code);
+  if(!p) return;
+  p.hidden = !p.hidden;
+  const d = findLinkedDrink(p);
+  if(d){
+    d.hidden = p.hidden;
+    saveState();
+    showToast(`「${p.name}」已${p.hidden?'隱藏':'顯示'}（商品庫存與飲品總表同步更新）`);
+  }else{
+    saveState();
+    showToast(`「${p.name}」已${p.hidden?'隱藏':'顯示'}`);
+  }
+  render();
+}
 async function actionAddMaterial(data){
   if(state.materials.some(m=>m.name===data.name)){
     showToast('已經有同名的原料了');
@@ -778,7 +821,7 @@ async function actionAddDrink(data){
   }
   const drink = {
     title: data.title, series: data.series || '其他',
-    ingredients: data.ingredients, price: data.price || null,
+    ingredients: data.ingredients, price: data.price || null, hidden: false,
   };
   state.drinks.push(drink);
   // auto-sync into 商品庫存
@@ -787,7 +830,7 @@ async function actionAddDrink(data){
     state.packaged.push({
       code: code, name: data.title, series: drink.series, drink_title: data.title,
       initial_stock: 0, safety_stock: 0, packaged_total: 0, sold_total: 0, scrapped_total: 0,
-      recipe_per_packet: recipeFromIngredients(data.ingredients),
+      recipe_per_packet: recipeFromIngredients(data.ingredients), hidden: false,
     });
   }
   saveState();
@@ -1003,14 +1046,19 @@ function renderMaterialEditModal(name){
 
 function renderConfirmModal(cfg){
   if(!cfg) return '';
+  const confirmLabel = cfg.confirmLabel || '確定刪除';
+  const secondaryBtn = cfg.secondaryLabel
+    ? `<button class="btn btn-accent" data-action="confirm-secondary" style="flex:1;">${esc(cfg.secondaryLabel)}</button>`
+    : '';
   return `
     <div class="modal-backdrop" data-action="close-confirm-modal">
       <div class="modal-card" data-action="stop">
         <div class="modal-title">請確認</div>
         <div class="modal-sub" style="white-space:pre-wrap;">${esc(cfg.message)}</div>
-        <div class="action-row" style="margin-top:14px;">
+        <div class="action-row" style="margin-top:14px; flex-wrap:wrap;">
           <button class="btn" data-action="close-confirm-modal" style="flex:1;">取消</button>
-          <button class="btn btn-accent" data-action="confirm-yes" style="flex:1;">確定刪除</button>
+          <button class="btn ${cfg.secondaryLabel?'':'btn-accent'}" data-action="confirm-yes" style="flex:1;">${esc(confirmLabel)}</button>
+          ${secondaryBtn}
         </div>
       </div>
     </div>
@@ -1071,8 +1119,10 @@ function renderPackagedScrapModal(code){
 }
 
 function renderPackaged(){
+  const hiddenCount = state.packaged.filter(p=>p.hidden).length;
   let list = state.packaged;
   if(packagedFilter==='low') list = list.filter(isPackagedLow);
+  if(!showHiddenPackaged) list = list.filter(p=>!p.hidden || (packagedFilter==='low' && isPackagedLow(p)));
 
   const groups = {};
   const order = [];
@@ -1083,15 +1133,15 @@ function renderPackaged(){
   });
   let rows = '';
   if(!list.length){
-    rows = `<tr><td colspan="7" class="empty-note">沒有符合條件的商品</td></tr>`;
+    rows = `<tr><td colspan="9" class="empty-note">沒有符合條件的商品</td></tr>`;
   }
   order.forEach(series=>{
-    rows += `<tr class="group-row"><td colspan="7">${esc(series)}</td></tr>`;
+    rows += `<tr class="group-row"><td colspan="9">${esc(series)}</td></tr>`;
     groups[series].forEach(p=>{
       const st = packagedStatus(p);
       const cur = packagedCurrentStock(p);
       rows += `<tr>
-        <td><div class="item-name">${esc(p.name)}</div><div class="item-code">${esc(p.code)}</div></td>
+        <td><div class="item-name">${esc(p.name)}${p.hidden?' <span class="tiny-tag">已隱藏</span>':''}</div><div class="item-code">${esc(p.code)}</div></td>
         <td class="num mono">${fmt(cur)}</td>
         <td class="num"><input class="edit-input" type="number" step="any" value="${p.safety_stock||''}" data-action="pkg-safety" data-code="${esc(p.code)}"></td>
         <td class="num mono muted">${fmt(p.packaged_total)}</td>
@@ -1105,6 +1155,8 @@ function renderPackaged(){
             <button class="btn btn-sm btn-ghost" data-action="open-pkg-scrap" data-code="${esc(p.code)}">報廢</button>
           </div>
         </td>
+        <td><button class="btn btn-sm btn-ghost" data-action="toggle-hide-packaged" data-code="${esc(p.code)}">${p.hidden?'顯示':'隱藏'}</button></td>
+        <td><button class="btn btn-sm btn-ghost danger" data-action="delete-packaged" data-code="${esc(p.code)}">刪除</button></td>
       </tr>`;
     });
   });
@@ -1112,17 +1164,18 @@ function renderPackaged(){
     <div class="section-head">
       <div>
         <div class="section-title">商品庫存</div>
-        <div class="section-desc">「今日包裝」會自動扣除對應原料；「今日使用」只扣除商品庫存本身（賣出／消耗）；「報廢」需填寫原因</div>
+        <div class="section-desc">「今日包裝」會自動扣除對應原料；「今日使用」只扣除商品庫存本身（賣出／消耗）；「報廢」需填寫原因；隱藏與飲品總表同步（例如活動結束的品項）</div>
       </div>
-      <div class="action-row">
+      <div class="action-row" style="flex-wrap:wrap;">
         ${packagedFilter==='low' ? `<button class="btn btn-sm" data-action="clear-packaged-filter">清除篩選（顯示全部）</button>` : ''}
+        <button class="btn btn-sm" data-action="toggle-show-hidden-packaged">${showHiddenPackaged?'隱藏已隱藏品項':`顯示已隱藏品項 (${hiddenCount})`}</button>
       </div>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr>
           <th>商品</th><th class="num">目前庫存</th><th class="num">安全庫存</th>
-          <th class="num">累計已包裝</th><th class="num">累計已使用</th><th>狀態</th><th>操作</th>
+          <th class="num">累計已包裝</th><th class="num">累計已使用</th><th>狀態</th><th>操作</th><th>隱藏</th><th>刪除</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -1133,6 +1186,8 @@ function renderPackaged(){
 function renderMenu(){
   let list = state.drinks;
   if(drinkCategoryFilter) list = list.filter(d=>(d.series||'其他')===drinkCategoryFilter);
+  const hiddenCount = state.drinks.filter(d=>d.hidden).length;
+  if(!showHiddenDrinks) list = list.filter(d=>!d.hidden);
 
   const groups = {};
   const order = [];
@@ -1144,21 +1199,22 @@ function renderMenu(){
 
   let rows = '';
   if(!list.length){
-    rows = `<tr><td colspan="7" class="empty-note">沒有符合條件的飲品</td></tr>`;
+    rows = `<tr><td colspan="8" class="empty-note">沒有符合條件的飲品</td></tr>`;
   }
   order.forEach(series=>{
-    rows += `<tr class="group-row"><td colspan="7">${esc(series)}</td></tr>`;
+    rows += `<tr class="group-row"><td colspan="8">${esc(series)}</td></tr>`;
     groups[series].forEach(d=>{
       const c = computeDrinkCost(d);
       const marginAmount = (c.price!==null && c.price!==undefined) ? (c.price - c.total) : null;
       const ostat = operatingStatus(c.margin);
       rows += `<tr>
-        <td><button class="link-name" data-action="open-drink-edit" data-title="${esc(d.title)}">${esc(d.title)}</button></td>
+        <td><button class="link-name" data-action="open-drink-edit" data-title="${esc(d.title)}">${esc(d.title)}</button>${d.hidden?' <span class="tiny-tag">已隱藏</span>':''}</td>
         <td class="num mono">${fmtMoney(c.total)}</td>
         <td class="num"><span>$</span><input class="edit-input price" type="number" step="1" value="${d.price===null||d.price===undefined?'':d.price}" data-action="price" data-title="${esc(d.title)}"></td>
         <td class="num mono">${marginAmount!==null?fmtMoney(marginAmount):'—'}</td>
         <td class="num mono">${marginLabel(c.margin)}</td>
         <td><span class="pill ${ostat.cls}">${ostat.label}</span></td>
+        <td><button class="btn btn-sm btn-ghost" data-action="toggle-hide-drink" data-title="${esc(d.title)}">${d.hidden?'顯示':'隱藏'}</button></td>
         <td><button class="btn btn-sm btn-ghost danger" data-action="delete-drink" data-title="${esc(d.title)}">刪除</button></td>
       </tr>`;
     });
@@ -1175,10 +1231,11 @@ function renderMenu(){
     <div class="section-head">
       <div>
         <div class="section-title">飲品總表</div>
-        <div class="section-desc">點品項名稱可以編輯配方；成本依原料目前單價即時計算</div>
+        <div class="section-desc">點品項名稱可以編輯配方；成本依原料目前單價即時計算；隱藏與商品庫存同步（例如活動結束的品項）</div>
       </div>
-      <div class="action-row">
+      <div class="action-row" style="flex-wrap:wrap;">
         <button class="btn btn-sm" data-action="export-drinks-excel">⬇ 匯出飲品總表 Excel</button>
+        <button class="btn btn-sm" data-action="toggle-show-hidden-drinks">${showHiddenDrinks?'隱藏已隱藏品項':`顯示已隱藏品項 (${hiddenCount})`}</button>
         <button class="btn btn-sm btn-accent" data-action="open-add-drink">＋ 新增飲品</button>
       </div>
     </div>
@@ -1188,7 +1245,7 @@ function renderMenu(){
       <table>
         <thead><tr>
           <th>飲品名稱</th><th class="num">總成本</th><th class="num">售價</th>
-          <th class="num">毛利金額</th><th class="num">毛利率</th><th>經營狀態</th><th>刪除</th>
+          <th class="num">毛利金額</th><th class="num">毛利率</th><th>經營狀態</th><th>隱藏</th><th>刪除</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -1559,8 +1616,49 @@ function bindEvents(){
     }
     else if(act==='delete-drink'){
       const title = action.dataset.title;
-      uiState.confirmModal = { message: `確定要刪除飲品「${title}」嗎？此動作無法復原（商品庫存裡對應的品項不會一併刪除）。`, run: ()=>actionDeleteDrink(title) };
+      const linked = findLinkedPackaged(title);
+      if(linked){
+        uiState.confirmModal = {
+          message: `確定要刪除飲品「${title}」嗎？此動作無法復原。\n\n商品庫存裡也有對應的「${linked.name}」，要一併刪除嗎？`,
+          confirmLabel: '只刪除飲品',
+          run: ()=>actionDeleteDrink(title),
+          secondaryLabel: '一併刪除商品庫存項目',
+          secondaryRun: ()=>{ actionDeleteDrink(title); actionDeletePackaged(linked.code); },
+        };
+      }else{
+        uiState.confirmModal = { message: `確定要刪除飲品「${title}」嗎？此動作無法復原。`, run: ()=>actionDeleteDrink(title) };
+      }
       render();
+    }
+    else if(act==='delete-packaged'){
+      const code = action.dataset.code;
+      const p = findPackaged(code);
+      if(!p) return;
+      const linked = findLinkedDrink(p);
+      if(linked){
+        uiState.confirmModal = {
+          message: `確定要刪除商品「${p.name}」嗎？此動作無法復原。\n\n飲品總表裡也有對應的「${linked.title}」，要一併刪除嗎？`,
+          confirmLabel: '只刪除商品',
+          run: ()=>actionDeletePackaged(code),
+          secondaryLabel: '一併刪除飲品總表項目',
+          secondaryRun: ()=>{ actionDeletePackaged(code); actionDeleteDrink(linked.title); },
+        };
+      }else{
+        uiState.confirmModal = { message: `確定要刪除商品「${p.name}」嗎？此動作無法復原。`, run: ()=>actionDeletePackaged(code) };
+      }
+      render();
+    }
+    else if(act==='toggle-hide-drink'){
+      actionToggleHideDrink(action.dataset.title);
+    }
+    else if(act==='toggle-hide-packaged'){
+      actionToggleHidePackaged(action.dataset.code);
+    }
+    else if(act==='toggle-show-hidden-drinks'){
+      showHiddenDrinks = !showHiddenDrinks; render();
+    }
+    else if(act==='toggle-show-hidden-packaged'){
+      showHiddenPackaged = !showHiddenPackaged; render();
     }
     else if(act==='close-confirm-modal'){
       uiState.confirmModal = null; render();
@@ -1569,6 +1667,12 @@ function bindEvents(){
       const cfg = uiState.confirmModal;
       uiState.confirmModal = null;
       if(cfg && typeof cfg.run === 'function') cfg.run();
+      render();
+    }
+    else if(act==='confirm-secondary'){
+      const cfg = uiState.confirmModal;
+      uiState.confirmModal = null;
+      if(cfg && typeof cfg.secondaryRun === 'function') cfg.secondaryRun();
       render();
     }
     else if(act==='toggle-show-hidden'){
