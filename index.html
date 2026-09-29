@@ -791,6 +791,23 @@ async function actionScrapPackaged(code, qty, note){
   showToast(`${p.name} 已報廢 ${fmt(qty)}`);
   render();
 }
+// 直接把商品庫存「設定」成某個數字，用於盤點或校正錯誤登記。
+// 跟「今日包裝」不同，這個動作完全不會連動扣原料 -- 差額只會加/減在
+// initial_stock 上，packaged_total／sold_total／scrapped_total（累計包裝
+// ／使用／報廢）維持不變，報表數字不會被打亂。
+async function actionAdjustPackagedStock(code, newValue, note){
+  const p = findPackaged(code);
+  if(!p || newValue === null || isNaN(newValue) || newValue < 0) return;
+  const cur = packagedCurrentStock(p);
+  const delta = newValue - cur;
+  if(delta === 0) return;
+  p.initial_stock = (p.initial_stock||0) + delta;
+  const stamp = nowStamp();
+  state.packaged_log.unshift({date:stamp.date, time:stamp.time, code, name:p.name, type:'調整', qty:delta, note: note || '設定庫存（不影響原料）'});
+  saveState();
+  showToast(`${p.name} 庫存已設定為 ${fmt(newValue)}`);
+  render();
+}
 async function actionSetPrice(title, val){
   const d = state.drinks.find(x=>x.title===title);
   if(!d) return;
@@ -807,6 +824,27 @@ async function actionUpdateDrinkIngredients(title, newIngredients){
   }
   saveState();
   showToast(`「${title}」配方已更新`);
+  render();
+}
+async function actionRenameDrink(oldTitle, newTitle){
+  newTitle = (newTitle||'').trim();
+  if(!newTitle){ showToast('請輸入名稱'); return; }
+  if(newTitle === oldTitle) return;
+  if(state.drinks.some(x=>x.title===newTitle)){ showToast('已經有同名的飲品了'); return; }
+  const d = state.drinks.find(x=>x.title===oldTitle);
+  if(!d) return;
+  d.title = newTitle;
+  const p = findLinkedPackaged(oldTitle);
+  if(p){
+    p.name = newTitle;
+    p.drink_title = newTitle;
+    // p.code is left unchanged on purpose -- it's the item's permanent
+    // internal ID, and changing it would break the 今日包裝/今日使用/報廢
+    // buttons for this row mid-edit. The display name is what updates.
+  }
+  uiState.drinkEditModal = newTitle;
+  saveState();
+  showToast(`已改名為「${newTitle}」`);
   render();
 }
 async function actionAddDrink(data){
@@ -827,9 +865,12 @@ async function actionAddDrink(data){
       initial_stock: 0, safety_stock: 0, packaged_total: 0, sold_total: 0, scrapped_total: 0,
       recipe_per_packet: recipeFromIngredients(data.ingredients), hidden: false,
     });
+    saveState();
+    showToast(`已新增飲品「${data.title}」，並同步到商品庫存`);
+  }else{
+    saveState();
+    showToast(`已新增飲品「${data.title}」，但商品代號「${code}」已經有商品在用，商品庫存沒有新增對應項目，請改用其他代號`);
   }
-  saveState();
-  showToast(`已新增飲品「${data.title}」，並同步到商品庫存`);
   return true;
 }
 
@@ -1113,6 +1154,29 @@ function renderPackagedScrapModal(code){
   `;
 }
 
+function renderPackagedAdjustModal(code){
+  const p = findPackaged(code);
+  if(!p) return '';
+  return `
+    <div class="modal-backdrop" data-action="close-pkg-adjust-modal">
+      <div class="modal-card" data-action="stop">
+        <div class="modal-title">${esc(p.name)} — 設定庫存</div>
+        <div class="modal-sub">目前庫存：${fmt(packagedCurrentStock(p))}（用於盤點或校正，不會連動扣原料）</div>
+        <div class="action-row">
+          <input class="qty-input" id="pkg-adjust-qty" type="number" step="any" min="0" placeholder="正確數量" value="${fmt(packagedCurrentStock(p))}">
+        </div>
+        <div class="action-row" style="margin-top:8px;">
+          <input class="edit-input full" id="pkg-adjust-note" type="text" placeholder="原因（選填，例如：盤點、校正誤扣）">
+        </div>
+        <div class="action-row" style="margin-top:14px;">
+          <button class="btn btn-accent" data-action="submit-pkg-adjust" data-code="${esc(p.code)}">儲存</button>
+          <button class="btn" data-action="close-pkg-adjust-modal">取消</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderPackaged(){
   const hiddenCount = state.packaged.filter(p=>p.hidden).length;
   let list = state.packaged;
@@ -1148,6 +1212,7 @@ function renderPackaged(){
             <button class="btn btn-sm btn-accent" data-action="pkg-add" data-code="${esc(p.code)}">今日包裝</button>
             <button class="btn btn-sm" data-action="pkg-sell" data-code="${esc(p.code)}">今日使用</button>
             <button class="btn btn-sm btn-ghost" data-action="open-pkg-scrap" data-code="${esc(p.code)}">報廢</button>
+            <button class="btn btn-sm btn-ghost" data-action="open-pkg-adjust" data-code="${esc(p.code)}">設定庫存</button>
           </div>
         </td>
         <td><button class="btn btn-sm btn-ghost" data-action="toggle-hide-packaged" data-code="${esc(p.code)}">${p.hidden?'顯示':'隱藏'}</button></td>
@@ -1271,6 +1336,14 @@ function renderDrinkEditModal(title){
       <div class="modal-card modal-wide" data-action="stop">
         <div class="modal-title">${esc(d.title)}</div>
         <div class="modal-sub">編輯配方，材料與用量會自動重算成本（總成本 ${fmtMoney(c.total)}，原料${fmtMoney(c.matcost)}＋包材${fmtMoney(c.packcost)}）</div>
+        <div class="modal-form-block">
+          <div class="modal-block-title">品項名稱（改名後，商品庫存的對應項目會一起更新）</div>
+          <div class="action-row">
+            <input class="edit-input full" id="ed-drink-title" type="text" value="${esc(d.title)}" placeholder="飲品名稱">
+            <button class="btn btn-sm btn-accent" data-action="save-drink-title" data-title="${esc(d.title)}">改名</button>
+          </div>
+        </div>
+        <div class="modal-block-title" style="margin-top:14px;">配方（材料 × 用量）</div>
         <div id="ed-ingredients">${rowsHtml}</div>
         <button class="btn btn-sm" data-action="add-edit-ingredient-row" style="margin-top:8px;">＋ 新增一項材料</button>
         <datalist id="ed-material-list">${matOptions}</datalist>
@@ -1291,6 +1364,7 @@ function renderAddDrinkForm(){
       <div class="form-title">新增飲品</div>
       <div class="form-grid">
         <label>品項名稱 <input id="nd-title" type="text" placeholder="例如：ACD-018／莓果氣泡"></label>
+        <label>商品代號（選填，商品庫存會用這個當作代號，不填會直接用品項名稱） <input id="nd-code" type="text" placeholder="例如：ORD-11"></label>
         <label>系列 <input id="nd-series" list="series-list" type="text" placeholder="例如：複方水＋特調系列">
           <datalist id="series-list">${seriesList.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
         </label>
@@ -1340,7 +1414,7 @@ function renderMain(){
   return '';
 }
 
-let uiState = { addMaterialOpen:false, addDrinkOpen:false, ingredientRows:1, materialEditModal:null, scrapModal:null, pkgScrapModal:null, drinkEditModal:null, confirmModal:null, _materialFormMounted:false, _drinkFormMounted:false };
+let uiState = { addMaterialOpen:false, addDrinkOpen:false, ingredientRows:1, materialEditModal:null, scrapModal:null, pkgScrapModal:null, pkgAdjustModal:null, drinkEditModal:null, confirmModal:null, _materialFormMounted:false, _drinkFormMounted:false };
 let categoryFilter = null;
 let drinkCategoryFilter = null;
 let logFilter = 'all';
@@ -1447,6 +1521,8 @@ function render(){
     modalHolder.innerHTML = renderScrapModal(uiState.scrapModal);
   }else if(uiState.pkgScrapModal){
     modalHolder.innerHTML = renderPackagedScrapModal(uiState.pkgScrapModal);
+  }else if(uiState.pkgAdjustModal){
+    modalHolder.innerHTML = renderPackagedAdjustModal(uiState.pkgAdjustModal);
   }else if(uiState.drinkEditModal){
     modalHolder.innerHTML = renderDrinkEditModal(uiState.drinkEditModal);
   }else if(uiState.confirmModal){
@@ -1767,6 +1843,7 @@ function bindEvents(){
       actionAddDrink({
         title, series: getVal('nd-series').trim() || '其他',
         price: getNum('nd-price'), ingredients,
+        code: getVal('nd-code').trim() || null,
       }).then(ok=>{ if(ok){ uiState.addDrinkOpen=false; render(); } });
     }
     else if(act==='open-pkg-scrap'){
@@ -1782,6 +1859,19 @@ function bindEvents(){
       if(!qty || qty<=0){ showToast('請輸入大於 0 的報廢數量'); return; }
       if(!note){ showToast('請填寫報廢原因'); return; }
       actionScrapPackaged(code, qty, note).then(()=>{ uiState.pkgScrapModal=null; render(); });
+    }
+    else if(act==='open-pkg-adjust'){
+      uiState.pkgAdjustModal = action.dataset.code; render();
+    }
+    else if(act==='close-pkg-adjust-modal'){
+      uiState.pkgAdjustModal = null; render();
+    }
+    else if(act==='submit-pkg-adjust'){
+      const code = action.dataset.code;
+      const qty = getNum('pkg-adjust-qty');
+      const note = getVal('pkg-adjust-note').trim();
+      if(qty===null || qty<0){ showToast('請輸入大於等於 0 的數量'); return; }
+      actionAdjustPackagedStock(code, qty, note).then(()=>{ uiState.pkgAdjustModal=null; render(); });
     }
     else if(act==='open-drink-edit'){
       uiState.drinkEditModal = action.dataset.title; render();
@@ -1816,6 +1906,11 @@ function bindEvents(){
       });
       if(!ingredients.length){ showToast('至少要有一項材料'); return; }
       actionUpdateDrinkIngredients(title, ingredients).then(()=>{ uiState.drinkEditModal=null; render(); });
+    }
+    else if(act==='save-drink-title'){
+      const oldTitle = action.dataset.title;
+      const newTitle = getVal('ed-drink-title');
+      actionRenameDrink(oldTitle, newTitle);
     }
     else if(act==='log-filter'){
       logFilter = action.dataset.type; render();
